@@ -24,6 +24,7 @@ public class ExtensionsTests
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<OrderSubmitted>) && x.ImplementationType == typeof(OrdersHandler));
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<OrderShipped>) && x.ImplementationType == typeof(OrdersHandler));
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<OrderCreated>) && x.ImplementationType == typeof(OrdersHandler));
+        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
@@ -37,6 +38,7 @@ public class ExtensionsTests
 
         // Assert
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<CustomerCreated>) && x.ImplementationType == typeof(CustomerCreatedHandler));
+        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
@@ -50,6 +52,7 @@ public class ExtensionsTests
 
         // Assert
         services.Should().NotContain(x => x.ImplementationType == typeof(NotConsumer));
+        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
@@ -63,6 +66,7 @@ public class ExtensionsTests
 
         // Assert
         services.Should().NotContain(x => x.ServiceType == typeof(IConsumer<UserCreated>));
+        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
@@ -80,5 +84,6 @@ public class ExtensionsTests
             "order_shipped:tests_consumer_group_1",
             "order_submitted:tests_consumer_group_1",
             "customer_created:tests_consumer_group_2");
+        Cache.ConsumersMetadata.Clear();
     }
 }
