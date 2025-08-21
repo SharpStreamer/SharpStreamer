@@ -2,6 +2,8 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using SharpStreamer.Abstractions;
 using SharpStreamer.Abstractions.Attributes;
+using SharpStreamer.Abstractions.Services;
+using SharpStreamer.Abstractions.Services.Abstractions;
 
 namespace SharpStreamer.RabbitMq;
 
@@ -16,6 +18,7 @@ public static class Extensions
                                              type.GetGenericTypeDefinition() == typeof(IConsumer<>) &&
                                              HasConsumerAttributeAndCache(type.GetGenericArguments()[0], type))
             .WithTransientLifetime());
+        services.AddSingleton<IMetadataService, MetadataService>();
         return services;
     }
 
