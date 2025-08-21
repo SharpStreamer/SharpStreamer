@@ -88,5 +88,13 @@ public class MetadataServiceTests
             "order_shipped:tests_consumer_group_1",
             "order_submitted:tests_consumer_group_1",
             "customer_created:tests_consumer_group_2");
+        _metadataService.ConsumersMetadata["order_created:tests_consumer_group_1"].ConsumerType.Should().Be(typeof(IConsumer<OrderCreated>));
+        _metadataService.ConsumersMetadata["order_created:tests_consumer_group_1"].EventType.Should().Be(typeof(OrderCreated));
+        _metadataService.ConsumersMetadata["order_shipped:tests_consumer_group_1"].ConsumerType.Should().Be(typeof(IConsumer<OrderShipped>));
+        _metadataService.ConsumersMetadata["order_shipped:tests_consumer_group_1"].EventType.Should().Be(typeof(OrderShipped));
+        _metadataService.ConsumersMetadata["order_submitted:tests_consumer_group_1"].ConsumerType.Should().Be(typeof(IConsumer<OrderSubmitted>));
+        _metadataService.ConsumersMetadata["order_submitted:tests_consumer_group_1"].EventType.Should().Be(typeof(OrderSubmitted));
+        _metadataService.ConsumersMetadata["customer_created:tests_consumer_group_2"].ConsumerType.Should().Be(typeof(IConsumer<CustomerCreated>));
+        _metadataService.ConsumersMetadata["customer_created:tests_consumer_group_2"].EventType.Should().Be(typeof(CustomerCreated));
     }
 }
