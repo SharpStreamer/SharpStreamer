@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6FA8FF51
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStreamer.RabbitMq.Tests", "SharpStreamer.RabbitMq.Tests\SharpStreamer.RabbitMq.Tests.csproj", "{DE0F7E34-4511-4F3D-8542-2B91BB51A7F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStreamer.Abstractions.Tests", "SharpStreamer.Abstractions.Tests\SharpStreamer.Abstractions.Tests.csproj", "{16112D31-5B5C-4D39-A450-504C09899262}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,9 +36,14 @@ Global
 		{DE0F7E34-4511-4F3D-8542-2B91BB51A7F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE0F7E34-4511-4F3D-8542-2B91BB51A7F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE0F7E34-4511-4F3D-8542-2B91BB51A7F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16112D31-5B5C-4D39-A450-504C09899262}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16112D31-5B5C-4D39-A450-504C09899262}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16112D31-5B5C-4D39-A450-504C09899262}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16112D31-5B5C-4D39-A450-504C09899262}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{12B4A297-61EE-46DD-9DE2-AD62495AF6E5} = {CA42A2C8-F411-4571-AEBC-345D2CE35DF8}
 		{DE0F7E34-4511-4F3D-8542-2B91BB51A7F1} = {6FA8FF51-A5D8-472D-9128-C22C5E69AAB1}
+		{16112D31-5B5C-4D39-A450-504C09899262} = {6FA8FF51-A5D8-472D-9128-C22C5E69AAB1}
 	EndGlobalSection
 EndGlobal

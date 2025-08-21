@@ -1,6 +1,4 @@
-using SharpStreamer.Abstractions;
-
-namespace SharpStreamer.RabbitMq.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Customers;
+namespace SharpStreamer.Abstractions.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Customers;
 
 public class CustomerCreatedHandler : IConsumer<CustomerCreated>
 {

@@ -1,6 +1,4 @@
-using SharpStreamer.Abstractions;
-
-namespace SharpStreamer.RabbitMq.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Orders;
+namespace SharpStreamer.Abstractions.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Orders;
 
 public class OrdersHandler : 
     IConsumer<OrderSubmitted>, IConsumer<OrderCreated>, IConsumer<OrderShipped>

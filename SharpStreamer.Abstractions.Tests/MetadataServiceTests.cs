@@ -1,89 +1,92 @@
 ﻿using System.Reflection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using SharpStreamer.Abstractions;
-using SharpStreamer.RabbitMq.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses;
-using SharpStreamer.RabbitMq.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Customers;
-using SharpStreamer.RabbitMq.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Orders;
-using SharpStreamer.RabbitMq.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Users;
+using SharpStreamer.Abstractions.Services;
+using SharpStreamer.Abstractions.Services.Abstractions;
+using SharpStreamer.Abstractions.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses;
+using SharpStreamer.Abstractions.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Customers;
+using SharpStreamer.Abstractions.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Orders;
+using SharpStreamer.Abstractions.Tests.AddSharpStreamerRabbitMqDependencyInjectionClasses.Users;
 
-namespace SharpStreamer.RabbitMq.Tests;
+namespace SharpStreamer.Abstractions.Tests;
 
-public class ExtensionsTests
+public class MetadataServiceTests
 {
+    private readonly IMetadataService _metadataService;
+
+    public MetadataServiceTests()
+    {
+        _metadataService = new MetadataService();
+    }
+
     [Fact]
-    public void AddSharpStreamerRabbitMq_WhenOneClassIsChildOfMultipleConsumer_AddsConsumersCorrectly()
+    public void AddServicesAndCache_WhenOneClassIsChildOfMultipleConsumer_AddsConsumersCorrectly()
     {
         // Arrange
         IServiceCollection services = new ServiceCollection();
 
         // Act
-        services.AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly());
+        _metadataService.AddServicesAndCache(services, [ Assembly.GetExecutingAssembly() ]);
 
         // Assert
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<OrderSubmitted>) && x.ImplementationType == typeof(OrdersHandler));
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<OrderShipped>) && x.ImplementationType == typeof(OrdersHandler));
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<OrderCreated>) && x.ImplementationType == typeof(OrdersHandler));
-        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
-    public void AddSharpStreamerRabbitMq_WhenOneClassIsChildOfOneConsumer_AddsConsumersCorrectly()
+    public void AddServicesAndCache_WhenOneClassIsChildOfOneConsumer_AddsConsumersCorrectly()
     {
         // Arrange
         IServiceCollection services = new ServiceCollection();
 
         // Act
-        services.AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly());
+        _metadataService.AddServicesAndCache(services, [ Assembly.GetExecutingAssembly() ]);
 
         // Assert
         services.Should().Contain(x => x.ServiceType == typeof(IConsumer<CustomerCreated>) && x.ImplementationType == typeof(CustomerCreatedHandler));
-        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
-    public void AddSharpStreamerRabbitMq_WhenClassIsNotConsumer_ShouldNotAddConsumer()
+    public void AddServicesAndCache_WhenClassIsNotConsumer_ShouldNotAddConsumer()
     {
         // Arrange
         IServiceCollection services = new ServiceCollection();
 
         // Act
-        services.AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly());
+        _metadataService.AddServicesAndCache(services, [ Assembly.GetExecutingAssembly() ]);
 
         // Assert
         services.Should().NotContain(x => x.ImplementationType == typeof(NotConsumer));
-        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
-    public void AddSharpStreamerRabbitMq_WhenClassIsConsumerButEventDoesNotHaveConsumeEventAttribute_ShouldNotAddConsumer()
+    public void AddServicesAndCache_WhenClassIsConsumerButEventDoesNotHaveConsumeEventAttribute_ShouldNotAddConsumer()
     {
         // Arrange
         IServiceCollection services = new ServiceCollection();
 
         // Act
-        services.AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly());
+        _metadataService.AddServicesAndCache(services, [ Assembly.GetExecutingAssembly() ]);
 
         // Assert
         services.Should().NotContain(x => x.ServiceType == typeof(IConsumer<UserCreated>));
-        Cache.ConsumersMetadata.Clear();
     }
 
     [Fact]
-    public void AddSharpStreamerRabbitMq_WhenConsumersAddedInDi_TypesShouldBeCached()
+    public void AddServicesAndCache_WhenConsumersAddedInDi_TypesShouldBeCached()
     {
         // Arrange
         IServiceCollection services = new ServiceCollection();
 
         // Act
-        services.AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly());
+        _metadataService.AddServicesAndCache(services, [ Assembly.GetExecutingAssembly() ]);
 
         // Assert
-        Cache.ConsumersMetadata.Should().ContainKeys(
+        _metadataService.ConsumersMetadata.Should().ContainKeys(
             "order_created:tests_consumer_group_1",
             "order_shipped:tests_consumer_group_1",
             "order_submitted:tests_consumer_group_1",
             "customer_created:tests_consumer_group_2");
-        Cache.ConsumersMetadata.Clear();
     }
 }

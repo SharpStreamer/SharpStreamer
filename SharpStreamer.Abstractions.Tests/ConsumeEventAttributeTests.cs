@@ -1,7 +1,7 @@
 using FluentAssertions;
 using SharpStreamer.Abstractions.Attributes;
 
-namespace SharpStreamer.RabbitMq.Tests;
+namespace SharpStreamer.Abstractions.Tests;
 
 public class ConsumeEventAttributeTests
 {
