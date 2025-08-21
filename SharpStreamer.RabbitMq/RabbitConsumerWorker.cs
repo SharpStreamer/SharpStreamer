@@ -12,9 +12,14 @@ public class RabbitConsumerWorker(
     ILogger<StreamSystem> streamSystemLogger,
     IOptions<RabbitConfig> rabbitConfig,
     IMetadataService metadataService
-    ) : IHostedService
+    ) : BackgroundService
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        StreamSystem streamSystem = await CreateStreamSystem();
+    }
+
+    private async Task<StreamSystem> CreateStreamSystem()
     {
         StreamSystem streamSystem = await StreamSystem.Create(
             new StreamSystemConfig()
@@ -34,11 +39,6 @@ public class RabbitConsumerWorker(
                     }
                 }
             }, streamSystemLogger);
-        
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
+        return streamSystem;
     }
 }
