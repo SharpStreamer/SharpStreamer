@@ -45,7 +45,7 @@ internal class MetadataService : IMetadataService
         return true;
     }
 
-    public void CacheConsumerMetadata(List<ConsumeEventAttribute> consumeEventAttributes, Type consumerType, Type eventType)
+    private void CacheConsumerMetadata(List<ConsumeEventAttribute> consumeEventAttributes, Type consumerType, Type eventType)
     {
         foreach (ConsumeEventAttribute consumeEventAttribute in consumeEventAttributes)
         {

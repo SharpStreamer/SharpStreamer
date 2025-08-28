@@ -97,4 +97,18 @@ public class MetadataServiceTests
         _metadataService.ConsumersMetadata["customer_created:tests_consumer_group_2"].ConsumerType.Should().Be(typeof(IConsumer<CustomerCreated>));
         _metadataService.ConsumersMetadata["customer_created:tests_consumer_group_2"].EventType.Should().Be(typeof(CustomerCreated));
     }
+
+    [Fact]
+    public void GetAllConsumerGroups_WhenConsumersExists_ReturnsDistinctConsumerGroups()
+    {
+        // Arrange
+        IServiceCollection services = new ServiceCollection();
+
+        // Act
+        _metadataService.AddServicesAndCache(services, [ Assembly.GetExecutingAssembly() ]);
+
+        // Assert
+        List<string> consumerGroups = _metadataService.GetAllConsumerGroups();
+        consumerGroups.Should().BeEquivalentTo(["tests_consumer_group_1", "tests_consumer_group_2"]);
+    }
 }
