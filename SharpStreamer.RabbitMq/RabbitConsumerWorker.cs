@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,7 +14,8 @@ public class RabbitConsumerWorker(
     ILogger<RabbitConsumerWorker> logger,
     ILogger<StreamSystem> streamSystemLogger,
     IOptions<RabbitConfig> rabbitConfig,
-    IMetadataService metadataService
+    IMetadataService metadataService,
+    IServiceScopeFactory serviceScopeFactory
     ) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,6 +44,7 @@ public class RabbitConsumerWorker(
             Task.Run(async () =>
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             {
+                await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
                 ISuperStreamConsumer consumer = await streamSystem.CreateSuperStreamConsumer(
                     new RawSuperStreamConsumerConfig(topic.Name)
                     {

@@ -1,11 +1,15 @@
 using System.Reflection;
+using SharpStreamer.Api;
+using SharpStreamer.EntityFrameworkCore.Npgsql;
 using SharpStreamer.RabbitMq;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi("docs");
 
-builder.Services.AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly());
+builder.Services
+    .AddSharpStreamerRabbitMq(Assembly.GetExecutingAssembly())
+    .AddSharpPersistenceNpgSql<ApiDbContext>();
 
 var app = builder.Build();
 
@@ -14,10 +18,5 @@ app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/openapi/docs.json", "SharpStreamer.Api");
 });
-
-// var provider = builder.Services.BuildServiceProvider();
-// // await Extensions.TestStreamer(provider.GetRequiredService<ILogger<Producer>>(), provider.GetRequiredService<ILogger<StreamSystem>>(), provider.GetRequiredService<ILogger<Consumer>>());
-// await SuperStreams.TestStreamer(provider.GetRequiredService<ILogger<Producer>>(), provider.GetRequiredService<ILogger<StreamSystem>>(), provider.GetRequiredService<ILogger<Consumer>>());
-
 
 app.Run();

@@ -18,6 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SharpStreamer.EntityFrameworkCore.Npgsql\SharpStreamer.EntityFrameworkCore.Npgsql.csproj" />
       <ProjectReference Include="..\SharpStreamer.RabbitMq\SharpStreamer.RabbitMq.csproj" />
     </ItemGroup>
 
