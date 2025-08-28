@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Stream.Client;
+using SharpStreamer.Abstractions;
 using SharpStreamer.Abstractions.Services.Abstractions;
 
 namespace SharpStreamer.RabbitMq;
@@ -15,9 +17,11 @@ public class RabbitConsumerWorker(
     ILogger<StreamSystem> streamSystemLogger,
     IOptions<RabbitConfig> rabbitConfig,
     IMetadataService metadataService,
-    IServiceScopeFactory serviceScopeFactory
+    IServiceScopeFactory serviceScopeFactory,
+    TimeProvider timeProvider
     ) : BackgroundService
 {
+    private readonly ConcurrentDictionary<string, Stopwatch> _offsetCommitTimersForEachPartition = new();
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         StreamSystem streamSystem = await CreateStreamSystem();
@@ -45,6 +49,7 @@ public class RabbitConsumerWorker(
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             {
                 await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
+                IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
                 ISuperStreamConsumer consumer = await streamSystem.CreateSuperStreamConsumer(
                     new RawSuperStreamConsumerConfig(topic.Name)
                     {
@@ -59,7 +64,7 @@ public class RabbitConsumerWorker(
                         // Message handler - handles messages from ALL partitions
                         MessageHandler = async (superStream, consumer, context, message) =>
                         {
-                            await HandleMessage(message, context, superStream, consumer);
+                            await HandleMessage(message, context, superStream, consumer, consumerGroup, eventsRepository);
                         },
                     });
 
@@ -72,22 +77,46 @@ public class RabbitConsumerWorker(
         }
     }
 
-    private static async Task HandleMessage(Message message, MessageContext context, string superStream, RawConsumer consumer)
+    private async Task HandleMessage
+        (Message message, MessageContext context, string topicWithPartition, RawConsumer consumer, string consumerGroup, IEventsRepository eventsRepository)
     {
         try
         {
-            // Process the message
-            Console.WriteLine(Encoding.ASCII.GetString(message.Data.Contents) + " - "  + context.Offset + "from - " + superStream);
-                            
-            // Commit offset after successful processing
-            await consumer.StoreOffset(context.Offset);
-                            
-            Console.WriteLine($"✓ Processed and committed offset: {context.Offset}");
+            EventEntity @event = new EventEntity()
+            {
+                EventKey = message.ApplicationProperties["event_key"].ToString() ?? throw new Exception("Received event doesn't have key header"),
+                Id = Guid.Parse(message.ApplicationProperties["idempotency_id"].ToString() ?? throw new Exception("Received event doesn't have idempotency id")),
+                TryCount = 0,
+                Flags = 0,
+                SentAt = DateTime.Parse(message.ApplicationProperties["sent_at"].ToString() ?? throw new Exception("Received event doesn't have sent at header")),
+                UpdatedAt = null,
+                Timestamp = timeProvider.GetUtcNow().DateTime,
+                ConsumerGroup = consumerGroup,
+                EventBody = Encoding.UTF8.GetString(message.Data.Contents)
+            }
+            .WithHeaders(message.ApplicationProperties.ToDictionary(p => p.Key, p => p.Value.ToString() ?? ""));
+
+            await eventsRepository.CreateIfNotExists(@event);
+
+            Stopwatch stopwatch = _offsetCommitTimersForEachPartition.GetOrAdd(topicWithPartition, _ =>
+            {
+                Stopwatch stopwatch = new();
+                stopwatch.Start();
+                return stopwatch;
+            });
+
+            if (stopwatch.Elapsed >= TimeSpan.FromMinutes(1))
+            {
+                // Commit offset after successful processing
+                await consumer.StoreOffset(context.Offset);
+
+                logger.LogInformation($"Offset commited for topic-partition : {topicWithPartition}. Time elapsed after last commit:  {stopwatch.Elapsed}");
+                stopwatch.Restart();
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Error processing message at offset {context.Offset}: {ex.Message}");
-            // Don't commit offset on error - message will be reprocessed
+            logger.LogError(ex, "Error occured when processing message");
         }
     }
 

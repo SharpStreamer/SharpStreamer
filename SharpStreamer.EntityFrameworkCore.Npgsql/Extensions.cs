@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using SharpStreamer.Abstractions;
 
 namespace SharpStreamer.EntityFrameworkCore.Npgsql;
 
@@ -9,6 +11,8 @@ public static class Extensions
         where TDbContext : DbContext
     {
         services.AddHostedService<DbInitializerService<TDbContext>>();
+        services.AddScoped<IEventsRepository, EventsRepository<TDbContext>>();
+        services.TryAddSingleton(TimeProvider.System);
         return services;
     }
 }
