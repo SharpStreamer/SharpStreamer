@@ -1,3 +1,4 @@
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,8 +8,17 @@ namespace SharpStreamer.EntityFrameworkCore.Npgsql;
 public class DbInitializerService<TDbContext>(IServiceScopeFactory serviceScopeFactory) : BackgroundService
     where TDbContext : DbContext
 {
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        throw new NotImplementedException();
+        string dbInitializerScriptPath = Path.Combine(AppContext.BaseDirectory, "db_init.sql");
+        string script = await File.ReadAllTextAsync(dbInitializerScriptPath, stoppingToken);
+        await RunDbInitScript(script);
+    }
+
+    private async Task RunDbInitScript(string script)
+    {
+        await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
+        TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        await dbContext.Database.GetDbConnection().ExecuteAsync(sql: script, transaction: null);
     }
 }
