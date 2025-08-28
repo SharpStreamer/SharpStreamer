@@ -30,6 +30,8 @@ internal class MetadataService : IMetadataService
             .WithTransientLifetime());
     }
 
+    public List<string> GetAllConsumerGroups() => _consumersMetadata.Select(x => x.Key.Split(':')[1]).Distinct().ToList();
+
     private bool HasConsumerAttributeAndCache(Type eventType, Type consumerType)
     {
         List<ConsumeEventAttribute> consumeEventAttributes = eventType.GetCustomAttributes<ConsumeEventAttribute>().ToList();

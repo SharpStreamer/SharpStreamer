@@ -9,12 +9,16 @@ public static class Extensions
 {
     public static IServiceCollection AddSharpStreamerRabbitMq(this IServiceCollection services, params Assembly[] assemblies)
     {
+        services.AddOptions<RabbitConfig>()
+            .BindConfiguration("SharpStreamerConfig:RabbitConfig")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         IMetadataService metadataService = new MetadataService();
         metadataService.AddServicesAndCache(services, assemblies);
         services.AddSingleton(metadataService);
-        services.AddOptions<RabbitConfig>("SharpStreamerConfig:RabbitConfig")
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+
+        services.AddHostedService<RabbitConsumerWorker>();
         return services;
     }
 }

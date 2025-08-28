@@ -15,6 +15,9 @@ public class RabbitConfig
 
    [Required]
    public List<RabbitAddr> Addresses { get; set; }
+
+   [Required]
+   public List<RabbitTopic> ConsumeTopics { get; set; }
 }
 
 public class RabbitAddr
@@ -24,4 +27,16 @@ public class RabbitAddr
 
    [Required]
    public int Port { get; set; }
+}
+
+public class RabbitTopic
+{
+   [Required]
+   public string Name { get; set; }
+
+   [Required]
+   public int PartitionsCount { get; set; }
+
+   [Required]
+   public int RetentionTimeInMinutes { get; set; }
 }
