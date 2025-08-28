@@ -12,6 +12,9 @@ public static class Extensions
         IMetadataService metadataService = new MetadataService();
         metadataService.AddServicesAndCache(services, assemblies);
         services.AddSingleton(metadataService);
+        services.AddOptions<RabbitConfig>("SharpStreamerConfig:RabbitConfig")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         return services;
     }
 }
