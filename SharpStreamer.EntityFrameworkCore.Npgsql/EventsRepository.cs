@@ -1,6 +1,4 @@
-using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using SharpStreamer.Abstractions;
 
 namespace SharpStreamer.EntityFrameworkCore.Npgsql;
@@ -10,22 +8,33 @@ public class EventsRepository<TDbContext>(TDbContext dbContext) : IEventsReposit
 {
     public async Task CreateIfNotExists(EventEntity eventEntity)
     {
-        const string query = $@"
+        const string query = @"
                             INSERT INTO sharp_streamer.received_events
                             (id, event_body, event_headers, event_key, sent_at, timestamp, updated_at, consumer_group, flags, try_count)
                             VALUES 
                             (
-                            @{nameof(EventEntity.Id)},
-                            @{nameof(EventEntity.EventBody)}::JSONB,
-                            @{nameof(EventEntity.EventHeaders)}::JSONB,
-                            @{nameof(EventEntity.EventKey)},
-                            @{nameof(EventEntity.SentAt)},
-                            @{nameof(EventEntity.Timestamp)},
-                            @{nameof(EventEntity.UpdatedAt)},
-                            @{nameof(EventEntity.ConsumerGroup)},
-                            @{nameof(EventEntity.Flags)},
-                            @{nameof(EventEntity.TryCount)})
+                                {0},
+                                {1}::JSONB,
+                                {2}::JSONB,
+                                {3},
+                                {4},
+                                {5},
+                                {6},
+                                {7},
+                                {8},
+                                {9}
+                            )
                             ON CONFLICT (id) DO NOTHING;";
-        await dbContext.Database.GetDbConnection().ExecuteAsync(query, param: eventEntity, dbContext.Database.CurrentTransaction?.GetDbTransaction());
+        await dbContext.Database.ExecuteSqlRawAsync(sql: query,
+            eventEntity.Id,
+            eventEntity.EventBody,
+            eventEntity.EventHeaders,
+            eventEntity.EventKey,
+            eventEntity.SentAt,
+            eventEntity.Timestamp,
+            eventEntity.UpdatedAt,
+            eventEntity.ConsumerGroup,
+            eventEntity.Flags,
+            eventEntity.TryCount);
     }
 }

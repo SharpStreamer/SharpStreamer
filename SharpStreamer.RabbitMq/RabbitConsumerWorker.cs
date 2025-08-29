@@ -88,9 +88,9 @@ public class RabbitConsumerWorker(
                 Id = Guid.Parse(message.ApplicationProperties["idempotency_id"].ToString() ?? throw new Exception("Received event doesn't have idempotency id")),
                 TryCount = 0,
                 Flags = 0,
-                SentAt = DateTime.Parse(message.ApplicationProperties["sent_at"].ToString() ?? throw new Exception("Received event doesn't have sent at header")),
+                SentAt = DateTime.SpecifyKind(DateTime.Parse(message.ApplicationProperties["sent_at"].ToString() ?? throw new Exception("Received event doesn't have sent at header")), DateTimeKind.Utc),
                 UpdatedAt = null,
-                Timestamp = timeProvider.GetUtcNow().DateTime,
+                Timestamp = DateTime.SpecifyKind(timeProvider.GetUtcNow().DateTime, DateTimeKind.Utc),
                 ConsumerGroup = consumerGroup,
                 EventBody = Encoding.UTF8.GetString(message.Data.Contents)
             }

@@ -1,4 +1,3 @@
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +18,6 @@ public class DbInitializerService<TDbContext>(IServiceScopeFactory serviceScopeF
     {
         await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
         TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-        await dbContext.Database.GetDbConnection().ExecuteAsync(sql: script, transaction: null);
+        await dbContext.Database.ExecuteSqlRawAsync(sql: script);
     }
 }
