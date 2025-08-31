@@ -26,6 +26,8 @@ public class EventEntity
 
     public string ConsumerGroup { get; set; }
 
+    public string Partition { get; set; }
+
     public EventEntity WithHeaders(Dictionary<string, string> headers)
     {
         EventHeaders = JsonSerializer.Serialize(headers, Constants.SerializerOptions);

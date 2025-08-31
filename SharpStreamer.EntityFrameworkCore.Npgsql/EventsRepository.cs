@@ -10,7 +10,7 @@ public class EventsRepository<TDbContext>(TDbContext dbContext) : IEventsReposit
     {
         const string query = @"
                             INSERT INTO sharp_streamer.received_events
-                            (id, event_body, event_headers, event_key, sent_at, timestamp, updated_at, consumer_group, flags, try_count)
+                            (id, event_body, event_headers, event_key, sent_at, timestamp, updated_at, consumer_group, flags, try_count, partition)
                             VALUES 
                             (
                                 {0},
@@ -22,7 +22,8 @@ public class EventsRepository<TDbContext>(TDbContext dbContext) : IEventsReposit
                                 {6},
                                 {7},
                                 {8},
-                                {9}
+                                {9},
+                                {10}
                             )
                             ON CONFLICT (id) DO NOTHING;";
         await dbContext.Database.ExecuteSqlRawAsync(sql: query,
@@ -35,6 +36,7 @@ public class EventsRepository<TDbContext>(TDbContext dbContext) : IEventsReposit
             eventEntity.UpdatedAt,
             eventEntity.ConsumerGroup,
             eventEntity.Flags,
-            eventEntity.TryCount);
+            eventEntity.TryCount,
+            eventEntity.Partition);
     }
 }

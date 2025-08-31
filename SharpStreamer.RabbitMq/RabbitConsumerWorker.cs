@@ -92,7 +92,8 @@ public class RabbitConsumerWorker(
                 UpdatedAt = null,
                 Timestamp = DateTime.SpecifyKind(timeProvider.GetUtcNow().DateTime, DateTimeKind.Utc),
                 ConsumerGroup = consumerGroup,
-                EventBody = Encoding.UTF8.GetString(message.Data.Contents)
+                EventBody = Encoding.UTF8.GetString(message.Data.Contents),
+                Partition = topicWithPartition,
             }
             .WithHeaders(message.ApplicationProperties.ToDictionary(p => p.Key, p => p.Value.ToString() ?? ""));
 
