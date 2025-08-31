@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Stream.Client;
 using SharpStreamer.Abstractions;
+using SharpStreamer.Abstractions.Exceptions;
 using SharpStreamer.Abstractions.Services.Abstractions;
 
 namespace SharpStreamer.RabbitMq;
@@ -77,18 +78,17 @@ public class RabbitConsumerWorker(
         }
     }
 
-    private async Task HandleMessage
-        (Message message, MessageContext context, string topicWithPartition, RawConsumer consumer, string consumerGroup, IEventsRepository eventsRepository)
+    private async Task HandleMessage(Message message, MessageContext context, string topicWithPartition, RawConsumer consumer, string consumerGroup, IEventsRepository eventsRepository)
     {
         try
         {
             EventEntity @event = new EventEntity()
             {
-                EventKey = message.ApplicationProperties["event_key"].ToString() ?? throw new Exception("Received event doesn't have key header"),
-                Id = Guid.Parse(message.ApplicationProperties["idempotency_id"].ToString() ?? throw new Exception("Received event doesn't have idempotency id")),
+                EventKey = ExtractValueFromHeaders(message, "event_key"),
+                Id = Guid.Parse(ExtractValueFromHeaders(message, "idempotency_id")),
                 TryCount = 0,
                 Flags = 0,
-                SentAt = DateTime.SpecifyKind(DateTime.Parse(message.ApplicationProperties["sent_at"].ToString() ?? throw new Exception("Received event doesn't have sent at header")), DateTimeKind.Utc),
+                SentAt = DateTime.SpecifyKind(DateTime.Parse(ExtractValueFromHeaders(message, "sent_at")), DateTimeKind.Utc),
                 UpdatedAt = null,
                 Timestamp = DateTime.SpecifyKind(timeProvider.GetUtcNow().DateTime, DateTimeKind.Utc),
                 ConsumerGroup = consumerGroup,
@@ -99,25 +99,51 @@ public class RabbitConsumerWorker(
 
             await eventsRepository.CreateIfNotExists(@event);
 
-            Stopwatch stopwatch = _offsetCommitTimersForEachPartition.GetOrAdd(topicWithPartition, _ =>
-            {
-                Stopwatch stopwatch = new();
-                stopwatch.Start();
-                return stopwatch;
-            });
+            await CommitOffset(context, topicWithPartition, consumer, false);
+        }
+        catch (SharpStreamerException ex)
+        {
+            logger.LogError(ex, "SharpStreamer error happened while processing message");
 
-            if (stopwatch.Elapsed >= TimeSpan.FromMinutes(1))
-            {
-                // Commit offset after successful processing
-                await consumer.StoreOffset(context.Offset);
-
-                logger.LogInformation($"Offset commited for topic-partition : {topicWithPartition}. Time elapsed after last commit:  {stopwatch.Elapsed}");
-                stopwatch.Restart();
-            }
+            await CommitOffset(context, topicWithPartition, consumer, true);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error occured when processing message");
+            logger.LogError(ex, "Unknown error happened while processing message message content: {0}", Encoding.UTF8.GetString(message.Data.Contents));
+
+            await CommitOffset(context, topicWithPartition, consumer, true);
+        }
+    }
+
+    private static string ExtractValueFromHeaders(Message message, string headerName)
+    {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+        if (!message.ApplicationProperties.TryGetValue(headerName, out object value))
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+        {
+            throw new SharpStreamerException($@"Received event doesn't have ""{headerName}"" header");
+        }
+
+        return value.ToString()!;
+    }
+
+    private async Task CommitOffset(MessageContext context, string topicWithPartition, RawConsumer consumer, bool errorHappened)
+    {
+        bool isFirstMessage = !_offsetCommitTimersForEachPartition.ContainsKey(topicWithPartition);
+        Stopwatch stopwatch = _offsetCommitTimersForEachPartition.GetOrAdd(topicWithPartition, _ =>
+        {
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
+            return stopwatch;
+        });
+
+        // Commits offset when error happened, consumer took first message after starting or 1 minutes goes after last commit
+        if (stopwatch.Elapsed >= TimeSpan.FromMinutes(1) || isFirstMessage ||  errorHappened)
+        {
+            await consumer.StoreOffset(context.Offset);
+
+            logger.LogInformation($"Offset commited for topic-partition : {topicWithPartition}. Time elapsed after last commit:  {stopwatch.Elapsed}, is first message: {isFirstMessage}, error happened : {errorHappened}");
+            stopwatch.Restart();
         }
     }
 
