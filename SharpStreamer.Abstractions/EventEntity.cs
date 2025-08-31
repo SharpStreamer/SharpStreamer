@@ -18,11 +18,11 @@ public class EventEntity
 
     public EventFlags Flags { get; set; }
 
-    public DateTime SentAt { get; set; }
+    public DateTimeOffset SentAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
 
-    public DateTime Timestamp { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
 
     public string ConsumerGroup { get; set; }
 
