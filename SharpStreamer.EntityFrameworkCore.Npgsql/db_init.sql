@@ -16,4 +16,4 @@ CREATE TABLE IF NOT EXISTS sharp_streamer.received_events
     consumer_group VARCHAR(200) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_failed_events ON sharp_streamer.received_events(event_key) WHERE flags & flags = 2;
+CREATE INDEX IF NOT EXISTS idx_failed_events ON sharp_streamer.received_events(event_key) WHERE flags & 2 = 2;
