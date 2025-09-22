@@ -10,4 +10,8 @@
       <ProjectReference Include="..\DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="RabbitMQ.Stream.Client" Version="1.9.1" />
+    </ItemGroup>
+
 </Project>
