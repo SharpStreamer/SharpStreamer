@@ -16,6 +16,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStreamer.Abstractions.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStreamer.EntityFrameworkCore.Npgsql", "SharpStreamer.EntityFrameworkCore.Npgsql\SharpStreamer.EntityFrameworkCore.Npgsql.csproj", "{FF8D37EE-0160-452D-BE6C-F46586BA8F4D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer", "DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj", "{4612E613-656C-451F-84C4-7F4A718B53AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.EfCore.Npgsql", "DotNetCore.SharpStreamer.EfCore.Npgsql\DotNetCore.SharpStreamer.EfCore.Npgsql.csproj", "{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.RabbitMq", "DotNetCore.SharpStreamer.RabbitMq\DotNetCore.SharpStreamer.RabbitMq.csproj", "{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,10 +54,25 @@ Global
 		{FF8D37EE-0160-452D-BE6C-F46586BA8F4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF8D37EE-0160-452D-BE6C-F46586BA8F4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF8D37EE-0160-452D-BE6C-F46586BA8F4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4612E613-656C-451F-84C4-7F4A718B53AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4612E613-656C-451F-84C4-7F4A718B53AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4612E613-656C-451F-84C4-7F4A718B53AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4612E613-656C-451F-84C4-7F4A718B53AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{12B4A297-61EE-46DD-9DE2-AD62495AF6E5} = {CA42A2C8-F411-4571-AEBC-345D2CE35DF8}
 		{DE0F7E34-4511-4F3D-8542-2B91BB51A7F1} = {6FA8FF51-A5D8-472D-9128-C22C5E69AAB1}
 		{16112D31-5B5C-4D39-A450-504C09899262} = {6FA8FF51-A5D8-472D-9128-C22C5E69AAB1}
+		{4612E613-656C-451F-84C4-7F4A718B53AF} = {2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}
+		{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1} = {2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}
+		{8E18FAD7-27EA-4057-B69B-B88C713D5DE9} = {2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}
 	EndGlobalSection
 EndGlobal
