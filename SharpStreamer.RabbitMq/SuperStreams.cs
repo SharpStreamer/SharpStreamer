@@ -109,7 +109,6 @@ public static class SuperStreams
             default:
                 throw new ArgumentOutOfRangeException();
         }
-
         await Task.Yield();
     }
     
