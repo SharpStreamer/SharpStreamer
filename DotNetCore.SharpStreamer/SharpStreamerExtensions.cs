@@ -17,12 +17,13 @@ public static class SharpStreamerExtensions
     /// </summary>
     public static IServiceCollection AddSharpStreamer(this IServiceCollection services, params  Assembly[] addFromAssemblies)
     {
+        ICacheService cacheService = new CacheService();
         services.AddMediator(options =>
         {
             options.ServiceLifetime = ServiceLifetime.Transient;
             options.Assemblies = addFromAssemblies.Select(assembly => (AssemblyReference)assembly).ToList();
         });
-        services.AddSingleton<ICacheService, CacheService>();
+        services.AddSingleton<ICacheService>(cacheService);
         return services;
     }
 
