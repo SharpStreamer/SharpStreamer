@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
-public class StreamerBusNpgsql<TDbContext>(
+internal class StreamerBusNpgsql<TDbContext>(
     TDbContext dbContext,
     TimeProvider timeProvider,
     IIdGenerator idGenerator,

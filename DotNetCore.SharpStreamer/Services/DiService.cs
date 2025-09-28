@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DotNetCore.SharpStreamer.Services;
 
-public class DiService(ICacheService cacheService)
+internal class DiService(ICacheService cacheService)
 {
     public IServiceCollection AddSharpStreamer(IServiceCollection services, params Assembly[] addFromAssemblies)
     {
