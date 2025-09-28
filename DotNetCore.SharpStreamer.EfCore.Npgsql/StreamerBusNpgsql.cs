@@ -59,6 +59,9 @@ public class StreamerBusNpgsql<TDbContext>(
     {
         dbContext.Set<PublishedEvent>().Add(publishedEvent);
         await dbContext.SaveChangesAsync();
+
+        // detach the entity so it's no longer tracked
+        dbContext.Entry(publishedEvent).State = EntityState.Detached;
     }
 
     private static string GetContentAsString<T>(
