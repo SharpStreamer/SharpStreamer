@@ -1,14 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DotNetCore.SharpStreamer.Bus;
+using DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.CustomerCreated;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class EventsController : ControllerBase
+public class EventsController(IStreamerBus bus) : ControllerBase
 {
-    [HttpPost]
-    public Task<IActionResult> PublishEvent()
+    [HttpPost("customer-created")]
+    public async Task<IActionResult> PublishCustomerCreatedEvent()
     {
-        return Task.FromResult((IActionResult)Ok());
+        await bus.PublishAsync(new CustomerCreatedEvent()
+        {
+            PersonalNumber = "111",
+        });
+        return Ok();
+    }
+
+    [HttpPost("non-legit")]
+    public async Task<IActionResult> PublishNonLegitEvent()
+    {
+        await bus.PublishAsync(new EventWithoutProduceAttribute());
+        return Ok();
     }
 }
+public class EventWithoutProduceAttribute;
