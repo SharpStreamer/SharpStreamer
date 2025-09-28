@@ -13,4 +13,9 @@ public static class TypeExtensions
         return type.IsAssignableTo(RequestType) &&
                type.GetCustomAttribute<ConsumeEventAttribute>() is not null;
     }
+
+    public static bool IsLegitPublishableEvent(this Type type)
+    {
+        return type.GetCustomAttribute<PublishEventAttribute>() is not null;
+    }
 }

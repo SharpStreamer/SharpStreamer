@@ -10,4 +10,6 @@ public interface ICacheService
     /// Returns metadata of consumer which consumes event with name of 'eventName'
     /// </summary>
     ConsumerMetadata? GetConsumerMetadata(string eventName);
+
+    PublishableEventMetadata GetOrCreatePublishableEventMetadata<T>();
 }
