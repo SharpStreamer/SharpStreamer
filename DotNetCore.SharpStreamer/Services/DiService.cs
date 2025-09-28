@@ -1,8 +1,8 @@
 using System.Reflection;
-using DotNetCore.SharpStreamer.Bus.Attributes;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DotNetCore.SharpStreamer.Services;
 
@@ -16,6 +16,8 @@ public class DiService(ICacheService cacheService)
             options.Assemblies = addFromAssemblies.Select(assembly => (AssemblyReference)assembly).ToList();
         });
         services.AddSingleton<ICacheService>(cacheService);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<IIdGenerator, UlidGenerator>();
         CacheConsumableEventsMetadata(addFromAssemblies);
         return services;
     }
@@ -30,7 +32,7 @@ public class DiService(ICacheService cacheService)
 
     private void CacheConsumableEventsMetadata(Assembly assembly)
     {
-        IEnumerable<Type> consumableEventTypes = assembly.GetTypes();
+        IEnumerable<Type> consumableEventTypes = assembly.DefinedTypes;
         foreach (Type consumableEventType in consumableEventTypes)
         {
             cacheService.TryCacheConsumer(consumableEventType);
