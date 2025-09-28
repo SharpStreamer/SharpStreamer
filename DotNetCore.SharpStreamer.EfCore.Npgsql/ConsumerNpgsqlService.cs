@@ -23,7 +23,7 @@ public class ConsumerNpgsqlService<TDbContext>(TDbContext dbContext) : IConsumer
                                 ""Timestamp"",
                                 ""ExpiresAt"",
                                 ""Status"",
-                                ""Topic""
+                                ""Group""
                             )
                             VALUES
                             (
@@ -35,7 +35,7 @@ public class ConsumerNpgsqlService<TDbContext>(TDbContext dbContext) : IConsumer
                                 @{nameof(ReceivedEvent.Timestamp)},
                                 @{nameof(ReceivedEvent.ExpiresAt)},
                                 @{nameof(ReceivedEvent.Status)},
-                                @{nameof(ReceivedEvent.Topic)}
+                                @{nameof(ReceivedEvent.Group)}
                             );";
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
         IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
