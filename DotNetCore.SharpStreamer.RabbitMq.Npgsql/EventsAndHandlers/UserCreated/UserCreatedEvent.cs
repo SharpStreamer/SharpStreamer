@@ -1,6 +1,11 @@
-﻿namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.UserCreated;
+﻿using DotNetCore.SharpStreamer.Bus.Attributes;
+using Mediator;
 
-public class UserCreatedEvent
+namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.UserCreated;
+
+[ConsumeEvent("user_created")]
+[ProduceEvent("identity", "user_created")]
+public class UserCreatedEvent : IRequest
 {
     
 }

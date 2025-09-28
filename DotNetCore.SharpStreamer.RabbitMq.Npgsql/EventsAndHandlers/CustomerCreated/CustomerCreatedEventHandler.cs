@@ -2,9 +2,9 @@
 
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.CustomerCreated;
 
-public class CustomerCreatedEventHandler : IRequestHandler<CustomerCreatedEvent>
+public class CustomerCreatedEventHandler : BaseEventHandler<CustomerCreatedEvent>
 {
-    public ValueTask<Unit> Handle(CustomerCreatedEvent request, CancellationToken cancellationToken)
+    protected override ValueTask HandleEvent(CustomerCreatedEvent request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
