@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Data;
+using System.Text.Json;
+using Dapper;
 using DotNetCore.SharpStreamer.Bus;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
@@ -6,6 +8,7 @@ using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Services.Models;
 using DotNetCore.SharpStreamer.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
@@ -57,11 +60,32 @@ internal class StreamerBusNpgsql<TDbContext>(
 
     private async Task Insert(PublishedEvent publishedEvent)
     {
-        dbContext.Set<PublishedEvent>().Add(publishedEvent);
-        await dbContext.SaveChangesAsync();
-
-        // detach the entity so it's no longer tracked
-        dbContext.Entry(publishedEvent).State = EntityState.Detached;
+        const string insertQuery = $@"
+                            INSERT INTO sharp_streamer.published_events
+                            (
+                                ""Id"",
+                                ""Topic"",
+                                ""Content"",
+                                ""RetryCount"",
+                                ""SentAt"",
+                                ""Timestamp"",
+                                ""ExpiresAt"",
+                                ""Status""
+                            )
+                            VALUES
+                            (
+                                @{nameof(PublishedEvent.Id)},
+                                @{nameof(PublishedEvent.Topic)},
+                                @{nameof(PublishedEvent.Content)}::json,
+                                @{nameof(PublishedEvent.RetryCount)},
+                                @{nameof(PublishedEvent.SentAt)},
+                                @{nameof(PublishedEvent.Timestamp)},
+                                @{nameof(PublishedEvent.ExpiresAt)},
+                                @{nameof(PublishedEvent.Status)}
+                            );";
+        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
+        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
+        await dbConnection.ExecuteAsync(sql: insertQuery, param: publishedEvent, transaction: dbTransaction);
     }
 
     private static string GetContentAsString<T>(

@@ -26,7 +26,7 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                     SentAt = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
                     Timestamp = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
-                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    Status = table.Column<int>(type: "integer", maxLength: 100, nullable: false, comment: "None = 0,Succeeded = 1,Failed = 2")
                 },
                 constraints: table =>
                 {
@@ -46,7 +46,7 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                     SentAt = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
                     Timestamp = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
-                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    Status = table.Column<int>(type: "integer", maxLength: 100, nullable: false, comment: "None = 0,Succeeded = 1,Failed = 2")
                 },
                 constraints: table =>
                 {

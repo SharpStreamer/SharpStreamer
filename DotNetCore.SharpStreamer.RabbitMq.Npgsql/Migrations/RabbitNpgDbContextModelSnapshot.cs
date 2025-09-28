@@ -43,10 +43,10 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamptz");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("integer")
+                        .HasComment("None = 0,Succeeded = 1,Failed = 2");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamptz");
@@ -87,10 +87,10 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamptz");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("integer")
+                        .HasComment("None = 0,Succeeded = 1,Failed = 2");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamptz");

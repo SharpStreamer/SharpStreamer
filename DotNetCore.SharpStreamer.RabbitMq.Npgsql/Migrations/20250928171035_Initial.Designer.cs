@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
 {
     [DbContext(typeof(RabbitNpgDbContext))]
-    [Migration("20250928091600_Initial")]
+    [Migration("20250928171035_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -46,10 +46,10 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamptz");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("integer")
+                        .HasComment("None = 0,Succeeded = 1,Failed = 2");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamptz");
@@ -90,10 +90,10 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamptz");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("integer")
+                        .HasComment("None = 0,Succeeded = 1,Failed = 2");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamptz");

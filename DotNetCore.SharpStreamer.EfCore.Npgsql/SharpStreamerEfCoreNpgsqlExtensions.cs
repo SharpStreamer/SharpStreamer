@@ -1,5 +1,6 @@
 ﻿using DotNetCore.SharpStreamer.Bus;
 using DotNetCore.SharpStreamer.Entities;
+using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,14 @@ namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
 public static class SharpStreamerEfCoreNpgsqlExtensions
 {
+    private static readonly string EventStatusComment = BuildEventStatusComment();
+
+    private static string BuildEventStatusComment()
+    {
+        EventStatus[] values = Enum.GetValues<EventStatus>();
+        return string.Join(',', values.Select(status => $"{status} = {(int)status}"));
+    }
+
     public static IServiceCollection AddSharpStreamerNpgsql<TDbContext>(this IServiceCollection services)
         where TDbContext : DbContext
     {
@@ -37,8 +46,8 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.Property(e => e.Status)
                 .IsRequired()
-                .HasConversion<string>()
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .HasComment(EventStatusComment);
 
             entity.Property(e => e.Topic)
                 .IsRequired()
@@ -76,8 +85,8 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.Property(e => e.Status)
                 .IsRequired()
-                .HasConversion<string>()
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .HasComment(EventStatusComment);
 
             entity.Property(e => e.Topic)
                 .IsRequired()
