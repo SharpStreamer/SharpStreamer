@@ -1,5 +1,6 @@
 ﻿using DotNetCore.SharpStreamer.Bus;
 using DotNetCore.SharpStreamer.Entities;
+using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         where TDbContext : DbContext
     {
         services.AddScoped<IStreamerBus, StreamerBusNpgsql<TDbContext>>();
+        services.AddScoped<IConsumerService, ConsumerNpgsqlService<TDbContext>>();
         return services;
     }
 
