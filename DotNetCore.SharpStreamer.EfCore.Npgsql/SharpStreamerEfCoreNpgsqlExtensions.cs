@@ -46,7 +46,6 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.Property(e => e.Status)
                 .IsRequired()
-                .HasMaxLength(100)
                 .HasComment(EventStatusComment);
 
             entity.Property(e => e.Topic)
@@ -85,7 +84,6 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.Property(e => e.Status)
                 .IsRequired()
-                .HasMaxLength(100)
                 .HasComment(EventStatusComment);
 
             entity.Property(e => e.Topic)
