@@ -2,27 +2,21 @@ using System.Reflection;
 using DotNetCore.SharpStreamer.Bus.Attributes;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Services.Models;
-using Mediator;
+using DotNetCore.SharpStreamer.Utils;
 
 namespace DotNetCore.SharpStreamer.Services;
 
 internal class CacheService : ICacheService
 {
     private readonly Dictionary<string, ConsumerMetadata> _cache = new();
-    private static readonly Type IRequestType = typeof(IBaseRequest);
-    public void CacheConsumer(Type type)
+    public bool TryCacheConsumer(Type type)
     {
-        ConsumeEventAttribute? consumeEventAttribute = type.GetCustomAttribute<ConsumeEventAttribute>();
-
-        if (consumeEventAttribute is null)
+        if (!type.IsLegitConsumableEvent())
         {
-            throw new ArgumentException($"Consume event attribute not found for type: {type.FullName}");
+            return false;
         }
 
-        if (!type.IsAssignableTo(IRequestType))
-        {
-            throw new ArgumentException($"Type is not derived from mediator's IRequest class");
-        }
+        ConsumeEventAttribute consumeEventAttribute = type.GetCustomAttribute<ConsumeEventAttribute>()!;
 
         ConsumerMetadata consumerMetadata = new ConsumerMetadata()
         {
@@ -34,6 +28,8 @@ internal class CacheService : ICacheService
             throw new ArgumentException(
                 $"consumer of '{consumeEventAttribute.EventName}' was already registered. you only can register single consumer for single event.");
         }
+
+        return true;
     }
 
     public ConsumerMetadata? GetConsumerMetadata(string eventName)

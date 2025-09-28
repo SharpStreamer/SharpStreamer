@@ -8,7 +8,6 @@ namespace DotNetCore.SharpStreamer.Services;
 
 public class DiService(ICacheService cacheService)
 {
-    private static readonly Type IRequestType = typeof(IBaseRequest);
     public IServiceCollection AddSharpStreamer(IServiceCollection services, params Assembly[] addFromAssemblies)
     {
         services.AddMediator(options =>
@@ -31,16 +30,10 @@ public class DiService(ICacheService cacheService)
 
     private void CacheConsumableEventsMetadata(Assembly assembly)
     {
-        IEnumerable<Type> consumableEventTypes = assembly.GetTypes().Where(IsLegitConsumableEvent);
+        IEnumerable<Type> consumableEventTypes = assembly.GetTypes();
         foreach (Type consumableEventType in consumableEventTypes)
         {
-            cacheService.CacheConsumer(consumableEventType);
+            cacheService.TryCacheConsumer(consumableEventType);
         }
-    }
-
-    private static bool IsLegitConsumableEvent(Type type)
-    {
-        return type.IsAssignableTo(IRequestType) &&
-               type.GetCustomAttribute<ConsumeEventAttribute>() is not null;
     }
 }

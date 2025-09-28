@@ -4,11 +4,11 @@ namespace DotNetCore.SharpStreamer.Options;
 
 #nullable disable
 
-public class SharpStreamerOptions<TTopicMetadata>
+public class SharpStreamerOptions<TTopicOptions>
 {
     [Required]
     public string BaseConsumerGroupName { get; set; }
 
     [Required]
-    public List<TTopicMetadata> Topics { get; set; }
+    public List<TTopicOptions> Topics { get; set; }
 }

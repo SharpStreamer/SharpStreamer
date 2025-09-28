@@ -13,13 +13,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
-      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.3" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SharpStreamer.EntityFrameworkCore.Npgsql\SharpStreamer.EntityFrameworkCore.Npgsql.csproj" />
-      <ProjectReference Include="..\SharpStreamer.RabbitMq\SharpStreamer.RabbitMq.csproj" />
+      <ProjectReference Include="..\DotNetCore.SharpStreamer.EfCore.Npgsql\DotNetCore.SharpStreamer.EfCore.Npgsql.csproj" />
+      <ProjectReference Include="..\DotNetCore.SharpStreamer.RabbitMq\DotNetCore.SharpStreamer.RabbitMq.csproj" />
     </ItemGroup>
 
 </Project>
