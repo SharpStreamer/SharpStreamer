@@ -14,7 +14,7 @@ namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
 internal class StreamerBusNpgsql<TDbContext>(
     TDbContext dbContext,
-    TimeProvider timeProvider,
+    ITimeService timeService,
     IIdGenerator idGenerator,
     ICacheService cacheService) : IStreamerBus
     where TDbContext : DbContext
@@ -23,7 +23,7 @@ internal class StreamerBusNpgsql<TDbContext>(
     {
         PublishableEventMetadata metadata = cacheService.GetOrCreatePublishableEventMetadata<T>();
         string content = GetContentAsString(message, headers, metadata);
-        DateTimeOffset currentUtcTime = timeProvider.GetUtcNow();
+        DateTimeOffset currentUtcTime = timeService.GetUtcNow();
         PublishedEvent publishedEvent = new()
         {
             Id = idGenerator.GenerateId(),
@@ -43,7 +43,7 @@ internal class StreamerBusNpgsql<TDbContext>(
     {
         PublishableEventMetadata metadata = cacheService.GetOrCreatePublishableEventMetadata<T>();
         string content = GetContentAsString(message, headers, metadata);
-        DateTimeOffset currentUtcTime = timeProvider.GetUtcNow();
+        DateTimeOffset currentUtcTime = timeService.GetUtcNow();
         PublishedEvent publishedEvent = new()
         {
             Id = idGenerator.GenerateId(),

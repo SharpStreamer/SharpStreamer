@@ -18,6 +18,7 @@ internal class DiService(ICacheService cacheService)
         services.AddSingleton<ICacheService>(cacheService);
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IIdGenerator, UlidGenerator>();
+        services.AddSingleton<ITimeService, TimeService>();
         CacheConsumableEventsMetadata(addFromAssemblies);
         return services;
     }
