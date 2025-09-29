@@ -39,9 +39,6 @@ public class EventsProcessor(
             catch (Exception fin)
             {
                 logger.LogError(fin, "Error in processing events");
-            }
-            finally
-            {
                 await timeService.Delay(TimeSpan.FromMilliseconds(500), stoppingToken);
             }
         }
