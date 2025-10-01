@@ -2,8 +2,10 @@
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Services.Abstractions;
+using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
@@ -22,6 +24,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
     {
         services.AddScoped<IStreamerBus, StreamerBusNpgsql<TDbContext>>();
         services.AddScoped<IConsumerService, ConsumerNpgsqlService<TDbContext>>();
+        services.TryAddSingleton<IDistributedLockProvider, SharpStreamerDistributedLockProvider<TDbContext>>();
         return services;
     }
 
