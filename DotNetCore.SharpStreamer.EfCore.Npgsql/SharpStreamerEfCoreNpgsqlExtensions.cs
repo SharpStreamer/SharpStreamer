@@ -24,7 +24,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
     {
         services.AddScoped<IStreamerBus, StreamerBusNpgsql<TDbContext>>();
         services.AddScoped<IConsumerService, ConsumerNpgsqlService<TDbContext>>();
-        services.TryAddSingleton<IDistributedLockProvider, SharpStreamerDistributedLockProvider<TDbContext>>();
+        services.TryAddSingleton<IDistributedLockProvider, SharpStreamerDistributedLockProviderNpgsql<TDbContext>>();
         return services;
     }
 

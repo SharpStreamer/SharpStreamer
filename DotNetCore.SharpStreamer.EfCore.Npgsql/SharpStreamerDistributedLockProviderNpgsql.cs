@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
-public class SharpStreamerDistributedLockProvider<TDbContext>(TDbContext dbContext) : IDistributedLockProvider
+public class SharpStreamerDistributedLockProviderNpgsql<TDbContext>(TDbContext dbContext) : IDistributedLockProvider
     where TDbContext : DbContext
 {
     private readonly IDistributedLockProvider _synchronizationProvider =
