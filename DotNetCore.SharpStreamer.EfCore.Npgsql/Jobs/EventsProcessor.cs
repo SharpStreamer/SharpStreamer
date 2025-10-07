@@ -95,10 +95,12 @@ internal class EventsProcessor(
             }
 
             await mediator.Send(@event, CancellationToken.None);
+
+            // Mark event as processed
         }
         catch (Exception e)
         {
-            // if exception happens, set exception details in event headers. also log it.
+            // if exception happens, set exception details in event headers. also log it. mark as failed
         }
     }
 
