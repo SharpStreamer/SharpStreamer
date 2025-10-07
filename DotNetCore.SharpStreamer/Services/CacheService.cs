@@ -39,6 +39,7 @@ internal class CacheService : ICacheService
         ConsumerMetadata consumerMetadata = new ConsumerMetadata()
         {
             EventType = type,
+            NeedsToBeCheckedPredecessor = consumeEventAttribute.CheckPredecessor,
         };
 
         if (!_cache.TryAdd(consumeEventAttribute.EventName, consumerMetadata))
