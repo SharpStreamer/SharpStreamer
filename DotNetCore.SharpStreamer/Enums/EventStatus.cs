@@ -3,6 +3,7 @@ namespace DotNetCore.SharpStreamer.Enums;
 public enum EventStatus
 {
     None = 0,
-    Succeeded = 1,
-    Failed = 2,
+    InProgress = 1,
+    Succeeded = 2,
+    Failed = 3,
 }
