@@ -1,8 +1,12 @@
-﻿using DotNetCore.SharpStreamer.Entities;
+﻿using System.Text.Json;
+using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
+using DotNetCore.SharpStreamer.Services.Models;
+using DotNetCore.SharpStreamer.Utils;
 using Medallion.Threading;
+using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,11 +14,13 @@ using Microsoft.Extensions.Options;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql.Jobs;
 
-public class EventsProcessor(
+internal class EventsProcessor(
     IDistributedLockProvider lockProvider,
     ITimeService timeService,
+    ICacheService cacheService,
     IOptions<SharpStreamerOptions> options,
     IServiceScopeFactory serviceScopeFactory,
+    IMediator mediator,
     ILogger<EventsProcessor> logger)
     : BackgroundService
 {
@@ -50,7 +56,7 @@ public class EventsProcessor(
 
                 foreach (ReceivedEvent receivedEvent in eventsToProcess)
                 {
-                    ProcessEvent(receivedEvent, CancellationToken.None);
+                    await ProcessEvent(receivedEvent, CancellationToken.None);
                 }
             }
             catch (Exception ex)
@@ -61,16 +67,72 @@ public class EventsProcessor(
         }
     }
 
-    private void ProcessEvent(ReceivedEvent receivedEvent, CancellationToken none)
+    private async Task ProcessEvent(ReceivedEvent receivedEvent, CancellationToken none)
     {
         try
         {
-            // check if, needs to be checked predecessor and if yes, check it. if check fails throw exception
-            // Process event
+            (string rawEventBody, string eventName) = GetEventBodyAndName(receivedEvent.Content);
+
+            ConsumerMetadata? consumerMetadata = cacheService.GetConsumerMetadata(eventName);
+            if (consumerMetadata is null)
+            {
+                return;
+            }
+
+            if (consumerMetadata.NeedsToBeCheckedPredecessor)
+            {
+                await EnsurePredecessorsAreProcessed(receivedEvent);
+            }
+
+            object? @event = JsonSerializer.Deserialize(
+                rawEventBody,
+                consumerMetadata.EventType,
+                JsonExtensions.SharpStreamerJsonOptions);
+
+            if (@event is null)
+            {
+                throw new ArgumentException($"Because of unknown reason deserialized event was null. event body: {rawEventBody}");
+            }
+
+            await mediator.Send(@event, CancellationToken.None);
         }
         catch (Exception e)
         {
             // if exception happens, set exception details in event headers. also log it.
         }
+    }
+
+    private Task EnsurePredecessorsAreProcessed(ReceivedEvent receivedEvent)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static (string body, string eventName) GetEventBodyAndName(string content)
+    {
+        string eventBody;
+        string eventName;
+        using var doc = JsonDocument.Parse(content);
+        JsonElement root = doc.RootElement;
+        if (root.TryGetProperty("body", out JsonElement bodyElement) &&
+            bodyElement.ValueKind == JsonValueKind.Object)
+        {
+            eventBody = bodyElement.GetRawText();
+        }
+        else
+        {
+            throw new ArgumentException($"Received events content, doesn't contain body property. content: {content}");
+        }
+
+        if (root.TryGetProperty("event_name", out JsonElement eventNameElement) &&
+            bodyElement.ValueKind == JsonValueKind.String)
+        {
+            eventName = eventNameElement.GetString()!;
+        }
+        else
+        {
+            throw new ArgumentException($"Received events content, doesn't contain event name property. content: {content}");
+        }
+
+        return (eventBody, eventName);
     }
 }
