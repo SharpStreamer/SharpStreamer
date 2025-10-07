@@ -13,10 +13,10 @@ public static class SharpStreamerExtensions
     /// <summary>
     /// Adds mediator and caches specific metadata
     /// </summary>
-    public static IServiceCollection AddSharpStreamer(this IServiceCollection services, params  Assembly[] addFromAssemblies)
+    public static IServiceCollection AddSharpStreamer(this IServiceCollection services, string configurationSection, params  Assembly[] addFromAssemblies)
     {
         CacheService cacheService = new CacheService();
         DiService diService = new DiService(cacheService);
-        return diService.AddSharpStreamer(services, addFromAssemblies);
+        return diService.AddSharpStreamer(services, configurationSection, addFromAssemblies);
     }
 }

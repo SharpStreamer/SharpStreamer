@@ -14,7 +14,7 @@ builder.Services.AddDbContext<RabbitNpgDbContext>(options =>
     options.UseNpgsql("Pooling=True;Maximum Pool Size=100;Minimum Pool Size=1;Connection Idle Lifetime=60;Host=localhost;Port=5432;Database=rabbit_npg_sample;Username=admin;Password=admin");
 });
 builder.Services
-    .AddSharpStreamer(Assembly.GetExecutingAssembly())
+    .AddSharpStreamer("SharpStreamerSettings", Assembly.GetExecutingAssembly())
     .AddSharpStreamerNpgsql<RabbitNpgDbContext>();
 
 var app = builder.Build();

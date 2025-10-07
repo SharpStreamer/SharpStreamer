@@ -7,7 +7,7 @@ public static class SharpStreamerRabbitMqExtensions
 {
     public static IServiceCollection AddSharpStreamerRabbitMq(this IServiceCollection services)
     {
-        services.AddHostedService<EventsProcessor>();
+        services.AddHostedService<EventsPublisher>();
         return services;
     }
 }

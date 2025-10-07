@@ -4,14 +4,11 @@ namespace DotNetCore.SharpStreamer.Options;
 
 #nullable disable
 
-public class SharpStreamerOptions<TTopicOptions>
+public class SharpStreamerOptions
 {
     [Required]
     public string BaseConsumerGroupName { get; set; }
 
     [Required]
     public int ProcessorThreadCount { get; set; }
-
-    [Required]
-    public List<TTopicOptions> Topics { get; set; }
 }

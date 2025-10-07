@@ -1,4 +1,5 @@
 using System.Reflection;
+using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +9,8 @@ namespace DotNetCore.SharpStreamer.Services;
 
 internal class DiService(ICacheService cacheService)
 {
-    public IServiceCollection AddSharpStreamer(IServiceCollection services, params Assembly[] addFromAssemblies)
+    private const string CoreSettingsName = "Core";
+    public IServiceCollection AddSharpStreamer(IServiceCollection services, string configurationSection, params Assembly[] addFromAssemblies)
     {
         services.AddMediator(options =>
         {
@@ -19,6 +21,12 @@ internal class DiService(ICacheService cacheService)
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IIdGenerator, UlidGenerator>();
         services.AddSingleton<ITimeService, TimeService>();
+
+        services.AddOptions<SharpStreamerOptions>()
+            .BindConfiguration($"{configurationSection}:{CoreSettingsName}")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         CacheConsumableEventsMetadata(addFromAssemblies);
         return services;
     }

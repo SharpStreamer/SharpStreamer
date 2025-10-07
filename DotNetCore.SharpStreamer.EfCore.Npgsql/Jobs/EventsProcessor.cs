@@ -1,18 +1,21 @@
 ﻿using DotNetCore.SharpStreamer.Options;
-using DotNetCore.SharpStreamer.RabbitMq.Options;
+using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
+using Medallion.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace DotNetCore.SharpStreamer.RabbitMq.Jobs;
+namespace DotNetCore.SharpStreamer.EfCore.Npgsql.Jobs;
 
 public class EventsProcessor(
-    IServiceScopeFactory serviceScopeFactory,
+    IDistributedLockProvider lockProvider,
     ITimeService timeService,
-    ILogger<EventsProcessor> logger,
-    IOptions<SharpStreamerOptions<TopicOptions>> options) : BackgroundService
+    IOptions<SharpStreamerOptions> options,
+    IServiceScopeFactory serviceScopeFactory,
+    ILogger<EventsProcessor> logger)
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -33,12 +36,13 @@ public class EventsProcessor(
             try
             {
                 await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
-                IConsumerService consumerService = scope.ServiceProvider.GetRequiredService<IConsumerService>();
+                IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
 
+                
             }
-            catch (Exception fin)
+            catch (Exception ex)
             {
-                logger.LogError(fin, "Error in processing events");
+                logger.LogError(ex, "Error in processing events");
                 await timeService.Delay(TimeSpan.FromMilliseconds(200), stoppingToken);
             }
         }

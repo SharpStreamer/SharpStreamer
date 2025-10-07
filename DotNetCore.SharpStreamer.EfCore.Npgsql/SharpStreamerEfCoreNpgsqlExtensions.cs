@@ -1,6 +1,8 @@
 ﻿using DotNetCore.SharpStreamer.Bus;
+using DotNetCore.SharpStreamer.EfCore.Npgsql.Jobs;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
+using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,8 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         services.AddScoped<IStreamerBus, StreamerBusNpgsql<TDbContext>>();
         services.AddScoped<IConsumerService, ConsumerNpgsqlService<TDbContext>>();
         services.TryAddSingleton<IDistributedLockProvider, SharpStreamerDistributedLockProviderNpgsql<TDbContext>>();
+        services.AddScoped<IEventsRepository, EventsRepository<TDbContext>>();
+        services.AddHostedService<EventsProcessor>();
         return services;
     }
 
