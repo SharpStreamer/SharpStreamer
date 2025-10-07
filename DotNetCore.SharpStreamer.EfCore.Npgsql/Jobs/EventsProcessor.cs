@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using DotNetCore.SharpStreamer.Entities;
+using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
@@ -45,38 +46,49 @@ internal class EventsProcessor(
                 await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
                 IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
 
-                List<ReceivedEvent> eventsToProcess;
+                List<ReceivedEvent> events;
                 await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
                                  $"{options.Value.BaseConsumerGroupName}-{nameof(EventsProcessor)}",
                                  TimeSpan.FromMinutes(2),
                                  CancellationToken.None))
                 {
-                    eventsToProcess = await eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
+                    events = await eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
                 }
 
-                foreach (ReceivedEvent receivedEvent in eventsToProcess)
+                foreach (ReceivedEvent receivedEvent in events)
                 {
-                    await ProcessEvent(receivedEvent, CancellationToken.None);
+                    (Guid id, EventStatus newStatus, string? exceptionMessage) =
+                        await ProcessEvent(receivedEvent, CancellationToken.None);
+
+                    if (id != Guid.Empty)
+                    {
+                        receivedEvent.Status = newStatus;
+                        // TODO: Set exception message in headers for information
+                    }
                 }
+                
+                await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error in processing events");
-                await timeService.Delay(TimeSpan.FromMilliseconds(200), stoppingToken);
+                await timeService.Delay(TimeSpan.FromMilliseconds(200), CancellationToken.None);
             }
         }
     }
 
-    private async Task ProcessEvent(ReceivedEvent receivedEvent, CancellationToken none)
+    private async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent
+        (ReceivedEvent receivedEvent, CancellationToken none)
     {
+        ConsumerMetadata? consumerMetadata = null;
         try
         {
             (string rawEventBody, string eventName) = GetEventBodyAndName(receivedEvent.Content);
 
-            ConsumerMetadata? consumerMetadata = cacheService.GetConsumerMetadata(eventName);
+            consumerMetadata = cacheService.GetConsumerMetadata(eventName);
             if (consumerMetadata is null)
             {
-                return;
+                return (Guid.Empty, EventStatus.None, null);
             }
 
             if (consumerMetadata.NeedsToBeCheckedPredecessor)
@@ -96,17 +108,19 @@ internal class EventsProcessor(
 
             await mediator.Send(@event, CancellationToken.None);
 
-            // Mark event as processed
+            logger.LogError($"{consumerMetadata.EventType.Name} was handled successfully.");
+            return (receivedEvent.Id, EventStatus.Succeeded, null);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            // if exception happens, set exception details in event headers. also log it. mark as failed
+            logger.LogError(ex, $"{consumerMetadata?.EventType.Name ?? "Unknown event"} was handled unsuccessfully.");
+            return (receivedEvent.Id, EventStatus.Failed, ex.Message);
         }
     }
 
     private Task EnsurePredecessorsAreProcessed(ReceivedEvent receivedEvent)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask; // TODO: implement this feature
     }
 
     private static (string body, string eventName) GetEventBodyAndName(string content)
