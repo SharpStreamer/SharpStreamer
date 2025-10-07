@@ -17,6 +17,7 @@ public class EventsRepository<TDbContext>(
         List<ReceivedEvent> @events = await dbContext.Set<ReceivedEvent>()
             .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None)
             .Where(r => r.ExpiresAt > currentTime)
+            .Where(r => r.RetryCount < 50)
             .OrderBy(r => r.Id)
             .Take(100)
             .AsNoTracking()
