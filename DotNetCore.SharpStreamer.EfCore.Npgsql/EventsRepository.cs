@@ -63,6 +63,16 @@ public class EventsRepository<TDbContext>(
         await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids, UpdateTimestamp = timeService.GetUtcNow() }, transaction: dbTransaction);
     }
 
+    public async Task<List<Guid>> GetPredecessorIds(string eventKey, DateTimeOffset time, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Set<ReceivedEvent>()
+            .Where(r => r.EventKey == eventKey)
+            .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None || r.Status == EventStatus.InProgress)
+            .Where(r => r.Timestamp < time)
+            .Select(r => r.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)
     {
         if (receivedEvent.ErrorMessage is null)

@@ -58,7 +58,7 @@ internal class EventsProcessor(
                 foreach (ReceivedEvent receivedEvent in events)
                 {
                     (Guid id, EventStatus newStatus, string? exceptionMessage) =
-                        await ProcessEvent(receivedEvent, CancellationToken.None);
+                        await ProcessEvent(receivedEvent, eventsRepository);
 
                     const string escapeCharForExceptionMessage = "'";
                     if (id != Guid.Empty)
@@ -85,7 +85,7 @@ internal class EventsProcessor(
     }
 
     private async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent
-        (ReceivedEvent receivedEvent, CancellationToken none)
+        (ReceivedEvent receivedEvent, IEventsRepository eventsRepository)
     {
         ConsumerMetadata? consumerMetadata = null;
         try
@@ -100,7 +100,7 @@ internal class EventsProcessor(
 
             if (consumerMetadata.NeedsToBeCheckedPredecessor)
             {
-                await EnsurePredecessorsAreProcessed(receivedEvent);
+                await EnsurePredecessorsAreProcessed(receivedEvent, eventsRepository, CancellationToken.None);
             }
 
             object? @event = JsonSerializer.Deserialize(
@@ -125,9 +125,22 @@ internal class EventsProcessor(
         }
     }
 
-    private Task EnsurePredecessorsAreProcessed(ReceivedEvent receivedEvent)
+    private async Task EnsurePredecessorsAreProcessed(
+        ReceivedEvent receivedEvent,
+        IEventsRepository eventsRepository,
+        CancellationToken cancellationToken)
     {
-        return Task.CompletedTask; // TODO: implement this feature
+        List<Guid> predecessorIds =
+            await eventsRepository.GetPredecessorIds(
+                receivedEvent.EventKey,
+                receivedEvent.Timestamp,
+                cancellationToken);
+        if (predecessorIds.Any())
+        {
+            string predecessorIdsAsString = string.Join(',', predecessorIds.Select(id => id.ToString()));
+            throw new ArgumentException(
+                $"This received event can't be processed because there are predecessor events: {predecessorIdsAsString}");
+        }
     }
 
     private static (string body, string eventName) GetEventBodyAndName(string content)

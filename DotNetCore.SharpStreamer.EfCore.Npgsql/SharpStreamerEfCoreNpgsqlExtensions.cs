@@ -89,6 +89,14 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasDefaultValue(null)
                 .IsRequired(false);
 
+            entity.Property(e => e.EventKey)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.HasIndex(e => new { e.EventKey, e.Status, e.Timestamp })
+                .HasFilter("\"Status\" = 0 or \"Status\" = 3 or \"Status\" = 1")
+                .HasDatabaseName("IX_EventKey_Status");
+
             entity.HasIndex(e => new { e.Status, e.ExpiresAt, e.RetryCount })
                 .HasDatabaseName("IX_Events_For_Processing");
         });
@@ -124,6 +132,10 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.Property(e => e.Timestamp)
                 .HasColumnType("timestamptz")
+                .IsRequired();
+
+            entity.Property(e => e.EventKey)
+                .HasMaxLength(500)
                 .IsRequired();
 
             entity.Property(e => e.ExpiresAt)

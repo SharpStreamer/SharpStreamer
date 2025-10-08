@@ -3,6 +3,7 @@ using System;
 using DotNetCore.SharpStreamer.RabbitMq.Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
 {
     [DbContext(typeof(RabbitNpgDbContext))]
-    partial class RabbitNpgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008123057_AddsIndexForPredecessorCheck")]
+    partial class AddsIndexForPredecessorCheck
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,7 +120,7 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventKey", "Status", "Timestamp")
+                    b.HasIndex("EventKey", "Status")
                         .HasDatabaseName("IX_EventKey_Status")
                         .HasFilter("\"Status\" = 0 or \"Status\" = 3 or \"Status\" = 1");
 

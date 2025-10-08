@@ -20,4 +20,6 @@ public abstract class Event<TId>
     public DateTimeOffset ExpiresAt { get; set; }
 
     public EventStatus Status { get; set; }
+
+    public string EventKey { get; set; }
 }
