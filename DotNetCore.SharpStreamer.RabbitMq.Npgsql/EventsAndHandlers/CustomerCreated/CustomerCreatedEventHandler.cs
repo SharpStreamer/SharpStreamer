@@ -1,10 +1,10 @@
-﻿using Mediator;
+﻿using MediatR;
 
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.CustomerCreated;
 
-public class CustomerCreatedEventHandler : BaseEventHandler<CustomerCreatedEvent>
+public class CustomerCreatedEventHandler : IRequestHandler<CustomerCreatedEvent>
 {
-    protected override ValueTask HandleEvent(CustomerCreatedEvent request, CancellationToken cancellationToken)
+    public Task Handle(CustomerCreatedEvent request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using DotNetCore.SharpStreamer.Bus.Attributes;
-using Mediator;
+using MediatR;
 
 namespace DotNetCore.SharpStreamer.Utils;
 

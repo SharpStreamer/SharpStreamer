@@ -1,5 +1,5 @@
 ﻿using DotNetCore.SharpStreamer.Bus.Attributes;
-using Mediator;
+using MediatR;
 
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.UserCreated;
 

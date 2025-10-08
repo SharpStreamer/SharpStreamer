@@ -7,7 +7,7 @@ using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Services.Models;
 using DotNetCore.SharpStreamer.Utils;
 using Medallion.Threading;
-using Mediator;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
