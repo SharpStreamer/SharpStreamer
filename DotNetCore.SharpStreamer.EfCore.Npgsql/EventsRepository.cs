@@ -1,13 +1,18 @@
-﻿using DotNetCore.SharpStreamer.Entities;
+﻿using System.Data;
+using Dapper;
+using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
 public class EventsRepository<TDbContext>(
     TDbContext dbContext,
+    ILogger<EventsRepository<TDbContext>> logger,
     ITimeService timeService) : IEventsRepository
     where TDbContext : DbContext
 {
@@ -37,12 +42,19 @@ public class EventsRepository<TDbContext>(
 
     public async Task MarkPostProcessing(List<ReceivedEvent> receivedEvents, CancellationToken cancellationToken = default)
     {
-        Dictionary<Guid, ReceivedEvent> eventsData = @receivedEvents.ToDictionary(r => r.Id, r => r);
-        await dbContext.Set<ReceivedEvent>()
-            .Where(r => eventsData.ContainsKey(r.Id))
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(r => r.Status, r => eventsData[r.Id].Status), // TODO: Fix this
-                cancellationToken);
+        string updates = string.Join("\n", receivedEvents.Select(e => $"WHEN '{e.Id}' THEN {(int)e.Status}"));
+        List<Guid> ids = receivedEvents.Select(e => e.Id).ToList();
+
+        string updateSql = $@"
+                    UPDATE sharp_streamer.received_events
+                    SET ""Status"" = CASE ""Id""
+                                     {updates}
+                                     END
+                    WHERE ""Id"" = ANY (@ids);";
+
+        logger.LogInformation($"custom query executed: {updateSql}");
+        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
+        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
+        await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids }, transaction: dbTransaction);
     }
 }

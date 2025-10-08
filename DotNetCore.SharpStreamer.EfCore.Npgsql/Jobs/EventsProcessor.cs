@@ -63,16 +63,22 @@ internal class EventsProcessor(
                     if (id != Guid.Empty)
                     {
                         receivedEvent.Status = newStatus;
-                        // TODO: Set exception message in headers for information
+                        receivedEvent.ErrorMessage = exceptionMessage?[..1000]; // Takes first 1000 character only
                     }
                 }
-                
-                await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
+
+                if (events.Any())
+                {
+                    await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
+                }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error in processing events");
-                await timeService.Delay(TimeSpan.FromMilliseconds(200), CancellationToken.None);
+            }
+            finally
+            {
+                await timeService.Delay(TimeSpan.FromMilliseconds(1000), CancellationToken.None);
             }
         }
     }
@@ -140,7 +146,7 @@ internal class EventsProcessor(
         }
 
         if (root.TryGetProperty("event_name", out JsonElement eventNameElement) &&
-            bodyElement.ValueKind == JsonValueKind.String)
+            eventNameElement.ValueKind == JsonValueKind.String)
         {
             eventName = eventNameElement.GetString()!;
         }

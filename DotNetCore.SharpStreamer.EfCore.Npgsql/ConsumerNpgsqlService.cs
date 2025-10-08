@@ -4,10 +4,13 @@ using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
 
-public class ConsumerNpgsqlService<TDbContext>(TDbContext dbContext) : IConsumerService
+public class ConsumerNpgsqlService<TDbContext>(
+    TDbContext dbContext,
+    ILogger<ConsumerNpgsqlService<TDbContext>> logger) : IConsumerService
     where TDbContext : DbContext
 {
     public async Task SaveConsumedEvent(ReceivedEvent receivedEvent)
@@ -37,6 +40,7 @@ public class ConsumerNpgsqlService<TDbContext>(TDbContext dbContext) : IConsumer
                                 @{nameof(ReceivedEvent.Status)},
                                 @{nameof(ReceivedEvent.Group)}
                             );";
+        logger.LogInformation($"custom query executed: {insertQuery}");
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
         IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
         await dbConnection.ExecuteAsync(sql: insertQuery, param: receivedEvent, transaction: dbTransaction);
