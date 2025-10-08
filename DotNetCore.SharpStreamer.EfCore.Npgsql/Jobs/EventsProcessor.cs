@@ -48,7 +48,7 @@ internal class EventsProcessor(
 
                 List<ReceivedEvent> events;
                 await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
-                                 $"{options.Value.BaseConsumerGroupName}-{nameof(EventsProcessor)}",
+                                 $"{options.Value.ConsumerGroup}-{nameof(EventsProcessor)}",
                                  TimeSpan.FromMinutes(2),
                                  CancellationToken.None))
                 {

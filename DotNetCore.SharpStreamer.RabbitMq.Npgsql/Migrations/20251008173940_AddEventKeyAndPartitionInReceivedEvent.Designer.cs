@@ -3,6 +3,7 @@ using System;
 using DotNetCore.SharpStreamer.RabbitMq.Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
 {
     [DbContext(typeof(RabbitNpgDbContext))]
-    partial class RabbitNpgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008173940_AddEventKeyAndPartitionInReceivedEvent")]
+    partial class AddEventKeyAndPartitionInReceivedEvent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,8 +96,7 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Partition")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
 
                     b.Property<int>("RetryCount")
                         .ValueGeneratedOnAdd()

@@ -89,6 +89,11 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasDefaultValue(null)
                 .IsRequired(false);
 
+            entity.Property(e => e.Partition)
+                .HasMaxLength(500)
+                .HasDefaultValue(null)
+                .IsRequired(false);
+
             entity.Property(e => e.EventKey)
                 .HasMaxLength(500)
                 .IsRequired();

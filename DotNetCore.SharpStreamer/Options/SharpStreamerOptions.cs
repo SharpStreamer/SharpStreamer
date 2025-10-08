@@ -7,7 +7,7 @@ namespace DotNetCore.SharpStreamer.Options;
 public class SharpStreamerOptions
 {
     [Required]
-    public string BaseConsumerGroupName { get; set; }
+    public string ConsumerGroup { get; set; }
 
     [Required]
     public int ProcessorThreadCount { get; set; }

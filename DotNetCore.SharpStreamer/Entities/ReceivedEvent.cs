@@ -10,4 +10,6 @@ public class ReceivedEvent : Event<Guid>
     public string ErrorMessage { get; set; }
 
     public DateTimeOffset? UpdateTimestamp { get; set; }
+
+    public string Partition { get; set; }
 }

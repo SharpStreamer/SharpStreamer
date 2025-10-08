@@ -11,17 +11,17 @@ public class EventsController(IStreamerBus bus) : ControllerBase
     [HttpPost("customer-created")]
     public async Task<IActionResult> PublishCustomerCreatedEvent()
     {
-        await bus.PublishAsync(new CustomerCreatedEvent()
+        await bus.PublishLocalAsync(new CustomerCreatedEvent()
         {
             PersonalNumber = "111",
-        });
+        }, "key-1");
         return Ok();
     }
 
     [HttpPost("non-legit")]
     public async Task<IActionResult> PublishNonLegitEvent()
     {
-        await bus.PublishAsync(new EventWithoutProduceAttribute());
+        await bus.PublishAsync(new EventWithoutProduceAttribute(), "key-2");
         return Ok();
     }
 }

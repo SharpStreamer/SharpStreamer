@@ -26,7 +26,11 @@ public class ConsumerNpgsqlService<TDbContext>(
                                 ""Timestamp"",
                                 ""ExpiresAt"",
                                 ""Status"",
-                                ""Group""
+                                ""Group"",
+                                ""Partition"",
+                                ""EventKey"",
+                                ""ErrorMessage"",
+                                ""UpdateTimestamp""
                             )
                             VALUES
                             (
@@ -38,7 +42,11 @@ public class ConsumerNpgsqlService<TDbContext>(
                                 @{nameof(ReceivedEvent.Timestamp)},
                                 @{nameof(ReceivedEvent.ExpiresAt)},
                                 @{nameof(ReceivedEvent.Status)},
-                                @{nameof(ReceivedEvent.Group)}
+                                @{nameof(ReceivedEvent.Group)},
+                                @{nameof(ReceivedEvent.Partition)},
+                                @{nameof(ReceivedEvent.EventKey)},
+                                @{nameof(ReceivedEvent.ErrorMessage)},
+                                @{nameof(ReceivedEvent.UpdateTimestamp)}
                             );";
         logger.LogInformation($"custom query executed: {insertQuery}");
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
