@@ -23,7 +23,7 @@ public class EventsRepository<TDbContext>(
             .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None)
             .Where(r => r.ExpiresAt > currentTime)
             .Where(r => r.RetryCount < 50)
-            .OrderBy(r => r.Id)
+            .OrderBy(r => r.Timestamp)
             .Take(100)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
