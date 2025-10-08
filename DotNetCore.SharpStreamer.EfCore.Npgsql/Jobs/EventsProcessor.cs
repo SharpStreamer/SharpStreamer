@@ -115,7 +115,7 @@ internal class EventsProcessor(
 
             await mediator.Send(@event, CancellationToken.None);
 
-            logger.LogError($"{consumerMetadata.EventType.Name} was handled successfully.");
+            logger.LogInformation($"{consumerMetadata.EventType.Name} was handled successfully.");
             return (receivedEvent.Id, EventStatus.Succeeded, null);
         }
         catch (Exception ex)
