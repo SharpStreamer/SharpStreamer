@@ -84,6 +84,11 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasDefaultValue(null)
                 .IsRequired(false);
 
+            entity.Property(e => e.UpdateTimestamp)
+                .HasColumnType("timestamptz")
+                .HasDefaultValue(null)
+                .IsRequired(false);
+
             entity.HasIndex(e => new { e.Status, e.ExpiresAt, e.RetryCount })
                 .HasDatabaseName("IX_Events_For_Processing");
         });

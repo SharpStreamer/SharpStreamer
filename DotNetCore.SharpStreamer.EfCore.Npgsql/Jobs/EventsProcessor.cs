@@ -60,10 +60,11 @@ internal class EventsProcessor(
                     (Guid id, EventStatus newStatus, string? exceptionMessage) =
                         await ProcessEvent(receivedEvent, CancellationToken.None);
 
+                    const string escapeCharForExceptionMessage = "'";
                     if (id != Guid.Empty)
                     {
                         receivedEvent.Status = newStatus;
-                        receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]; // Takes first 1000 character only
+                        receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
                     }
                 }
 
@@ -94,7 +95,7 @@ internal class EventsProcessor(
             consumerMetadata = cacheService.GetConsumerMetadata(eventName);
             if (consumerMetadata is null)
             {
-                return (Guid.Empty, EventStatus.None, null);
+                return (receivedEvent.Id, EventStatus.Succeeded, "Event handler metadata was not found. maybe you don't have it registered");
             }
 
             if (consumerMetadata.NeedsToBeCheckedPredecessor)
