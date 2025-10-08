@@ -24,6 +24,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{10B1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.RabbitMq.Npgsql", "DotNetCore.SharpStreamer.RabbitMq.Npgsql\DotNetCore.SharpStreamer.RabbitMq.Npgsql.csproj", "{F583D611-FAC1-4F0D-84D4-5BA89FA9CD22}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "items", "items", "{1519E3C3-A485-4805-9326-6BF544B51D92}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

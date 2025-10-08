@@ -1,3 +1,8 @@
-Just example of how rabbitmq streams can be integrated to use it like kafka (Save ordering between events and rebalance consumer groups if needed).
-
-Producing part is not implemented yet. [There is only implemented inbox for message processing]
+* Package publishing instructions:
+    * Navigate into class library project where you want to publish package
+    * Then pack this project in release mode:
+      *     dotnet pack --configuration Release
+    * Then publish this package into nuget provider server like this:
+      *     dotnet nuget push .\bin\Release\DotNetCore.SharpStreamer.1.0.0.nupkg -s https://api.nuget.org/v3/index.json -k {Your_API_Key}
+    * This will publish this package into nuget server provided in this script
+    * Change versions in csproj files.

@@ -15,4 +15,10 @@
       <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.9" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <PackageId>DotNetCore.SharpStreamer</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>SandrikaMgeli</Authors>
+        <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
+    </PropertyGroup>
 </Project>
