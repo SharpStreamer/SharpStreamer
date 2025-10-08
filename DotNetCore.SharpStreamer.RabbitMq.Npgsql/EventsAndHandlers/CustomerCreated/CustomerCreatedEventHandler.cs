@@ -2,10 +2,11 @@
 
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.CustomerCreated;
 
-public class CustomerCreatedEventHandler : IRequestHandler<CustomerCreatedEvent>
+public class CustomerCreatedEventHandler(ILogger<CustomerCreatedEventHandler> logger) : IRequestHandler<CustomerCreatedEvent>
 {
     public Task Handle(CustomerCreatedEvent request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        logger.LogInformation("Hello World!");
+        return Task.CompletedTask;
     }
 }
