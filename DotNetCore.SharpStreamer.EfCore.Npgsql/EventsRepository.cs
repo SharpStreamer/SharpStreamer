@@ -42,19 +42,33 @@ public class EventsRepository<TDbContext>(
 
     public async Task MarkPostProcessing(List<ReceivedEvent> receivedEvents, CancellationToken cancellationToken = default)
     {
-        string updates = string.Join("\n", receivedEvents.Select(e => $"WHEN '{e.Id}' THEN {(int)e.Status}"));
+        string statusUpdates = string.Join("\n", receivedEvents.Select(e => $"WHEN '{e.Id}' THEN {(int)e.Status}"));
+        string errorMessageUpdates = string.Join("\n", receivedEvents.Select(e => $"WHEN '{e.Id}' THEN {CalculateErrorMessageValue(e)}"));
         List<Guid> ids = receivedEvents.Select(e => e.Id).ToList();
 
         string updateSql = $@"
                     UPDATE sharp_streamer.received_events
                     SET ""Status"" = CASE ""Id""
-                                     {updates}
-                                     END
+                                     {statusUpdates}
+                                     END,
+                        ""ErrorMessage"" = CASE ""Id""
+                                           {errorMessageUpdates}
+                                           END
                     WHERE ""Id"" = ANY (@ids);";
 
         logger.LogInformation($"custom query executed: {updateSql}");
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
         IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
         await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids }, transaction: dbTransaction);
+    }
+
+    private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)
+    {
+        if (receivedEvent.ErrorMessage is null)
+        {
+            return "NULL";
+        }
+
+        return $"'{receivedEvent.ErrorMessage}'";
     }
 }

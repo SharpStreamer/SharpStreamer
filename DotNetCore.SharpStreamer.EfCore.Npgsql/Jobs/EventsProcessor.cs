@@ -63,7 +63,7 @@ internal class EventsProcessor(
                     if (id != Guid.Empty)
                     {
                         receivedEvent.Status = newStatus;
-                        receivedEvent.ErrorMessage = exceptionMessage?[..1000]; // Takes first 1000 character only
+                        receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]; // Takes first 1000 character only
                     }
                 }
 
