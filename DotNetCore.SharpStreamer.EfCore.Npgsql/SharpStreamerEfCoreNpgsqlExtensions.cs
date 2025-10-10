@@ -102,7 +102,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasFilter("\"Status\" = 0 or \"Status\" = 3 or \"Status\" = 1")
                 .HasDatabaseName("IX_EventKey_Status");
 
-            entity.HasIndex(e => new { e.Status, e.ExpiresAt, e.RetryCount })
+            entity.HasIndex(e => new { e.Status, e.UpdateTimestamp, e.RetryCount })
                 .HasDatabaseName("IX_Events_For_Processing");
         });
     }

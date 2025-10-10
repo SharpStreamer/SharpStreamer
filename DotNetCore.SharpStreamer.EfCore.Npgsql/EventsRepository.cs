@@ -18,10 +18,10 @@ public class EventsRepository<TDbContext>(
 {
     public async Task<List<ReceivedEvent>> GetAndMarkEventsForProcessing(CancellationToken cancellationToken = default)
     {
-        DateTimeOffset currentTime = timeService.GetUtcNow();
+        DateTimeOffset cutOffTime = timeService.GetUtcNow().AddMinutes(-1);
         List<ReceivedEvent> @events = await dbContext.Set<ReceivedEvent>()
             .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None)
-            .Where(r => r.ExpiresAt > currentTime)
+            .Where(r => r.UpdateTimestamp == null || r.UpdateTimestamp < cutOffTime)
             .Where(r => r.RetryCount < 50)
             .OrderBy(r => r.Timestamp)
             .Take(100)
