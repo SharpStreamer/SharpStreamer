@@ -4,7 +4,7 @@ using MediatR;
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.EventsAndHandlers.UserCreated;
 
 [ConsumeEvent("user_created")]
-[PublishEvent("identity", "user_created")]
+[PublishEvent("user_created", "identity")]
 public class UserCreatedEvent : IRequest
 {
     
