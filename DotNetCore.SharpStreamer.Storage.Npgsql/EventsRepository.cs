@@ -2,17 +2,20 @@
 using Dapper;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
+using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
 public class EventsRepository<TDbContext>(
     TDbContext dbContext,
     ILogger<EventsRepository<TDbContext>> logger,
+    IOptions<SharpStreamerOptions> sharpStreamerOptions,
     ITimeService timeService) : IEventsRepository
     where TDbContext : DbContext
 {
@@ -24,7 +27,7 @@ public class EventsRepository<TDbContext>(
             .Where(r => r.UpdateTimestamp == null || r.UpdateTimestamp < cutOffTime)
             .Where(r => r.RetryCount < 50)
             .OrderBy(r => r.Timestamp)
-            .Take(100)
+            .Take(sharpStreamerOptions.Value.ProcessingBatchSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -76,12 +79,38 @@ public class EventsRepository<TDbContext>(
 
     public async Task<List<PublishedEvent>> GetEventsToPublish(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        DateTimeOffset currentTime = timeService.GetUtcNow();
+        List<PublishedEvent> @events = await dbContext.Set<PublishedEvent>()
+            .Where(r => r.Status == EventStatus.None)
+            .Where(r => r.SentAt < currentTime)
+            .OrderBy(r => r.SentAt)
+            .Take(sharpStreamerOptions.Value.ProcessingBatchSize)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        List<Guid> eventIds = @events.Select(r => r.Id).ToList();
+        await dbContext.Set<PublishedEvent>()
+            .Where(r => eventIds.Contains(r.Id))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(r => r.RetryCount, r => r.RetryCount + 1),
+                cancellationToken);
+        return @events;
     }
 
-    public Task MarkPostPublishAttempt(List<PublishedEvent> events, CancellationToken cancellationToken = default)
+    public async Task MarkPostPublishAttempt(List<PublishedEvent> events, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        List<Guid> ids = events.Select(e => e.Id).ToList();
+
+        string updateSql = $@"
+                    UPDATE sharp_streamer.published_events
+                    SET ""Status"" = 2
+                    WHERE ""Id"" = ANY (@ids);";
+
+        logger.LogInformation($"custom query executed: {updateSql}");
+        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
+        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
+        await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids }, transaction: dbTransaction);
     }
 
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)

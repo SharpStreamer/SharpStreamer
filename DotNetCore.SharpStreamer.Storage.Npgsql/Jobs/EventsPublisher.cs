@@ -60,13 +60,10 @@ public class EventsPublisher(
                          CancellationToken.None))
         {
             List<PublishedEvent> publishedEvents = await eventsRepository.GetEventsToPublish(CancellationToken.None);
-            foreach (PublishedEvent publishedEvent in publishedEvents)
-            {
-                
-            }
 
             if (publishedEvents.Any())
             {
+                await transportService.Publish(publishedEvents);
                 await eventsRepository.MarkPostPublishAttempt(publishedEvents, CancellationToken.None);
             }
         }

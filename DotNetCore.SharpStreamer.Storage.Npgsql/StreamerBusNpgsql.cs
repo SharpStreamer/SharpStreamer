@@ -4,13 +4,11 @@ using Dapper;
 using DotNetCore.SharpStreamer.Bus;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
-using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Services.Models;
 using DotNetCore.SharpStreamer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Options;
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
@@ -18,8 +16,6 @@ internal class StreamerBusNpgsql<TDbContext>(
     TDbContext dbContext,
     ITimeService timeService,
     IIdGenerator idGenerator,
-    IConsumerService consumerService,
-    IOptions<SharpStreamerOptions> sharpStreamerOptions,
     ICacheService cacheService) : IStreamerBus
     where TDbContext : DbContext
 {
@@ -60,31 +56,6 @@ internal class StreamerBusNpgsql<TDbContext>(
             EventKey = eventKey,
         };
         await Insert(publishedEvent);
-    }
-
-    public async Task PublishLocalAsync<T>(T message, string eventKey, params KeyValuePair<string, string>[] headers)
-        where T : class
-    {
-        PublishableEventMetadata metadata = cacheService.GetOrCreatePublishableEventMetadata<T>();
-        string content = GetContentAsString(message, headers, metadata);
-        DateTimeOffset currentUtcTime = timeService.GetUtcNow();
-
-        ReceivedEvent receivedEvent = new()
-        {
-            Id = idGenerator.GenerateId(),
-            Content = content,
-            Timestamp = currentUtcTime,
-            SentAt = currentUtcTime,
-            RetryCount = 0,
-            Status = EventStatus.None,
-            Topic = metadata.TopicName,
-            EventKey = eventKey,
-            Group = sharpStreamerOptions.Value.ConsumerGroup,
-            UpdateTimestamp = null,
-            ErrorMessage = null,
-            Partition = null,
-        };
-        await consumerService.SaveConsumedEvent(receivedEvent);
     }
 
     private async Task Insert(PublishedEvent publishedEvent)

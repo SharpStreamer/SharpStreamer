@@ -11,7 +11,7 @@ public class EventsController(IStreamerBus bus) : ControllerBase
     [HttpPost("customer-created")]
     public async Task<IActionResult> PublishCustomerCreatedEvent()
     {
-        await bus.PublishLocalAsync(new CustomerCreatedEvent()
+        await bus.PublishAsync(new CustomerCreatedEvent()
         {
             PersonalNumber = "111",
         }, "key-1");

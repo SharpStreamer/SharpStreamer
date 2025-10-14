@@ -11,4 +11,7 @@ public class SharpStreamerOptions
 
     [Required]
     public int ProcessorThreadCount { get; set; }
+
+    [Required]
+    public int ProcessingBatchSize { get; set; }
 }

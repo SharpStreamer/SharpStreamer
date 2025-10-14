@@ -2,6 +2,7 @@ using System.Reflection;
 using DotNetCore.SharpStreamer;
 using DotNetCore.SharpStreamer.Storage.Npgsql;
 using DotNetCore.SharpStreamer.RabbitMq.Npgsql;
+using DotNetCore.SharpStreamer.Transport.RabbitMq;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,8 @@ builder.Services.AddDbContext<RabbitNpgDbContext>(options =>
 });
 builder.Services
     .AddSharpStreamer("SharpStreamerSettings", Assembly.GetExecutingAssembly())
-    .AddSharpStreamerNpgsql<RabbitNpgDbContext>();
+    .AddSharpStreamerNpgsql<RabbitNpgDbContext>()
+    .AddSharpStreamerRabbitMq();
 
 var app = builder.Build();
 

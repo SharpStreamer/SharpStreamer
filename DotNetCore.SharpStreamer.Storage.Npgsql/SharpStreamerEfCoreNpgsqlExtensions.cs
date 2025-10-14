@@ -140,7 +140,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasMaxLength(500)
                 .IsRequired();
 
-            entity.HasIndex(e => new { e.Status, e.Timestamp })
+            entity.HasIndex(e => new { e.Status, e.SentAt })
                 .HasDatabaseName("IX_Events_For_Publishing");
         });
     }
