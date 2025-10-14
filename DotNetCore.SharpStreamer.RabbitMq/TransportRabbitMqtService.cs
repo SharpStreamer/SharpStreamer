@@ -5,7 +5,7 @@ namespace DotNetCore.SharpStreamer.RabbitMq;
 
 public class TransportRabbitMqtService : ITransportService
 {
-    public Task Publish(PublishedEvent publishedEvent)
+    public Task Publish(List<PublishedEvent> publishedEvent)
     {
         throw new NotImplementedException();
     }

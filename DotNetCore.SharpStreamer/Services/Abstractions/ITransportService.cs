@@ -4,5 +4,5 @@ namespace DotNetCore.SharpStreamer.Services.Abstractions;
 
 public interface ITransportService
 {
-    Task Publish(PublishedEvent publishedEvent);
+    Task Publish(List<PublishedEvent> publishedEvent);
 }
