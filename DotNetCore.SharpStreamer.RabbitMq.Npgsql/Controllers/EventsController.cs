@@ -18,6 +18,16 @@ public class EventsController(IStreamerBus bus) : ControllerBase
         return Ok();
     }
 
+    [HttpPost("customer-created-delayed")]
+    public async Task<IActionResult> PublishCustomerCreatedDelayedEvent()
+    {
+        await bus.PublishDelayedAsync(new CustomerCreatedEvent()
+        {
+            PersonalNumber = "111",
+        }, TimeSpan.FromMinutes(1));
+        return Ok();
+    }
+
     [HttpPost("non-legit")]
     public async Task<IActionResult> PublishNonLegitEvent()
     {

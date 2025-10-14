@@ -38,7 +38,7 @@ internal class StreamerBusNpgsql<TDbContext>(
         await Insert(publishedEvent);
     }
 
-    public async Task PublishDelayedAsync<T>(T message, string eventKey, TimeSpan delay, params KeyValuePair<string, string>[] headers)
+    public async Task PublishDelayedAsync<T>(T message, TimeSpan delay, params KeyValuePair<string, string>[] headers)
         where T : class
     {
         PublishableEventMetadata metadata = cacheService.GetOrCreatePublishableEventMetadata<T>();
@@ -53,7 +53,7 @@ internal class StreamerBusNpgsql<TDbContext>(
             RetryCount = 0,
             Status = EventStatus.None,
             Topic = metadata.TopicName,
-            EventKey = eventKey,
+            EventKey = idGenerator.GenerateId().ToString(),
         };
         await Insert(publishedEvent);
     }

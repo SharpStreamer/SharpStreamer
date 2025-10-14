@@ -1,3 +1,29 @@
+* Delayed events WARNING:
+      
+  The library provides built-in support for delayed event publishing, allowing you to schedule an event to be published after a specific period of time.
+
+  However, delayed events always use a random GUID as their event key, rather than a user-defined or deterministic one.
+
+  Why random event keys?
+
+  In normal (immediate) events, you might want to use a deterministic event key to ensure ordering — for example, so that events with the same key are processed sequentially.
+  But delayed events behave differently:
+
+  Because they are scheduled for future publication, using a deterministic key could unintentionally block or delay other unrelated events that share the same key.
+
+  This can easily happen without the developer realizing it, especially when delayed events interact with normal ones in the same event stream.
+
+  To avoid this subtle and hard-to-debug problem, delayed events are always assigned a unique, random key.
+
+  What this means for you
+
+  Delayed events do not guarantee ordering relative to other events.
+
+  You should treat delayed events as independent — they will be published later, but not necessarily in sequence with other events.
+
+  If you require ordered processing, you should use immediate events with deterministic keys instead.
+
+  This design helps keep event processing predictable and prevents unintended blocking or ordering issues in your system.
 * Package publishing instructions:
     * Navigate into class library project where you want to publish package
     * Then pack this project in release mode:
