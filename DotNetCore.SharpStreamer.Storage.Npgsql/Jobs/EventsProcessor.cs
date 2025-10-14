@@ -70,16 +70,18 @@ internal class EventsProcessor(
             events = await eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
         }
 
+        Dictionary<Guid, EventStatus> processedEvents = new Dictionary<Guid, EventStatus>();
         foreach (ReceivedEvent receivedEvent in events)
         {
             (Guid id, EventStatus newStatus, string? exceptionMessage) =
-                await ProcessEvent(receivedEvent, eventsRepository);
+                await ProcessEvent(receivedEvent, eventsRepository, processedEvents);
 
             const string escapeCharForExceptionMessage = "'";
             if (id != Guid.Empty)
             {
                 receivedEvent.Status = newStatus;
                 receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
+                processedEvents.Add(id, newStatus);
             }
         }
 
@@ -90,7 +92,7 @@ internal class EventsProcessor(
     }
 
     private async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent
-        (ReceivedEvent receivedEvent, IEventsRepository eventsRepository)
+        (ReceivedEvent receivedEvent, IEventsRepository eventsRepository, Dictionary<Guid, EventStatus> processedEvents)
     {
         ConsumerMetadata? consumerMetadata = null;
         try
@@ -105,7 +107,7 @@ internal class EventsProcessor(
 
             if (consumerMetadata.NeedsToBeCheckedPredecessor)
             {
-                await EnsurePredecessorsAreProcessed(receivedEvent, eventsRepository, CancellationToken.None);
+                await EnsurePredecessorsAreProcessed(receivedEvent, eventsRepository, processedEvents, CancellationToken.None);
             }
 
             object? @event = JsonSerializer.Deserialize(
@@ -133,6 +135,7 @@ internal class EventsProcessor(
     private async Task EnsurePredecessorsAreProcessed(
         ReceivedEvent receivedEvent,
         IEventsRepository eventsRepository,
+        Dictionary<Guid, EventStatus> processedEvents,
         CancellationToken cancellationToken)
     {
         List<Guid> predecessorIds =
@@ -140,12 +143,17 @@ internal class EventsProcessor(
                 receivedEvent.EventKey,
                 receivedEvent.Timestamp,
                 cancellationToken);
-        if (predecessorIds.Any())
+        if (predecessorIds.Any() && !PredecessorsWereProcessedInSameBatch(predecessorIds, processedEvents))
         {
             string predecessorIdsAsString = string.Join(',', predecessorIds.Select(id => id.ToString()));
             throw new ArgumentException(
                 $"This received event can't be processed because there are predecessor events: {predecessorIdsAsString}");
         }
+    }
+
+    private bool PredecessorsWereProcessedInSameBatch(List<Guid> predecessorIds, Dictionary<Guid, EventStatus> processedEvents)
+    {
+        return predecessorIds.All(id => processedEvents.ContainsKey(id) && processedEvents[id] == EventStatus.Succeeded);
     }
 
     private static (string body, string eventName) GetEventBodyAndName(string content)
