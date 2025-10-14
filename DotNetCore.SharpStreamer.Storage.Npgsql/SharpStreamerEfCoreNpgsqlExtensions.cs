@@ -1,15 +1,15 @@
 ﻿using DotNetCore.SharpStreamer.Bus;
-using DotNetCore.SharpStreamer.EfCore.Npgsql.Jobs;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
+using DotNetCore.SharpStreamer.Storage.Npgsql.Jobs;
 using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
+namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
 public static class SharpStreamerEfCoreNpgsqlExtensions
 {

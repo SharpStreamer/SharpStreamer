@@ -14,7 +14,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStreamer.EntityFramewo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer", "DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj", "{4612E613-656C-451F-84C4-7F4A718B53AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.EfCore.Npgsql", "DotNetCore.SharpStreamer.EfCore.Npgsql\DotNetCore.SharpStreamer.EfCore.Npgsql.csproj", "{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Storage.Npgsql", "DotNetCore.SharpStreamer.Storage.Npgsql\DotNetCore.SharpStreamer.Storage.Npgsql.csproj", "{068DDCFC-2953-412C-AF8D-9FE0E4C42FB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}"
 EndProject

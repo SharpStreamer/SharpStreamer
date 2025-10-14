@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
-namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
+namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
 public class ConsumerNpgsqlService<TDbContext>(
     TDbContext dbContext,

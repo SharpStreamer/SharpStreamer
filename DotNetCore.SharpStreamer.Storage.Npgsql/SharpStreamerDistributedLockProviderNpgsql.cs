@@ -3,7 +3,7 @@ using Medallion.Threading.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
+namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
 public class SharpStreamerDistributedLockProviderNpgsql<TDbContext>(IServiceScopeFactory serviceScopeFactory) : IDistributedLockProvider
     where TDbContext : DbContext

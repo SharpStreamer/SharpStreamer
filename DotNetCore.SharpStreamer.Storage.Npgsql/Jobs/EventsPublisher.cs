@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace DotNetCore.SharpStreamer.EfCore.Npgsql.Jobs;
+namespace DotNetCore.SharpStreamer.Storage.Npgsql.Jobs;
 
 public class EventsPublisher(
     IOptions<SharpStreamerOptions> options,

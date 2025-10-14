@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using DotNetCore.SharpStreamer.EfCore.Npgsql;
+using DotNetCore.SharpStreamer.Storage.Npgsql;
 using Microsoft.EntityFrameworkCore;
 
 namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql;

@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <PackageId>DotNetCore.SharpStreamer.EfCore.Npgsql</PackageId>
+        <PackageId>DotNetCore.SharpStreamer.Storage.Npgsql</PackageId>
         <Version>1.0.0</Version>
         <Authors>SandrikaMgeli</Authors>
         <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using DotNetCore.SharpStreamer.Services.Models;
 
-[assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.EfCore.Npgsql")]
+[assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.Storage.Npgsql")]
 [assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.RabbitMq")]
 
 namespace DotNetCore.SharpStreamer.Services.Abstractions;

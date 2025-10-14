@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 
-namespace DotNetCore.SharpStreamer.EfCore.Npgsql;
+namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
 internal class StreamerBusNpgsql<TDbContext>(
     TDbContext dbContext,
