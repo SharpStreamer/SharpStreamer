@@ -23,7 +23,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DotNetCore.SharpStreamer.Storage.Npgsql\DotNetCore.SharpStreamer.Storage.Npgsql.csproj" />
-      <ProjectReference Include="..\DotNetCore.SharpStreamer.RabbitMq\DotNetCore.SharpStreamer.RabbitMq.csproj" />
+      <ProjectReference Include="..\DotNetCore.SharpStreamer.Transport.RabbitMq\DotNetCore.SharpStreamer.Transport.RabbitMq.csproj" />
     </ItemGroup>
 
 </Project>

@@ -18,7 +18,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.St
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.RabbitMq", "DotNetCore.SharpStreamer.RabbitMq\DotNetCore.SharpStreamer.RabbitMq.csproj", "{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Transport.RabbitMq", "DotNetCore.SharpStreamer.Transport.RabbitMq\DotNetCore.SharpStreamer.Transport.RabbitMq.csproj", "{8E18FAD7-27EA-4057-B69B-B88C713D5DE9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{10B13595-FECA-4B3A-BE6F-EE83B3B0F4E3}"
 EndProject

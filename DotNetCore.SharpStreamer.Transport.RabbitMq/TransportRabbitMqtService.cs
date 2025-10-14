@@ -1,7 +1,7 @@
 ﻿using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 
-namespace DotNetCore.SharpStreamer.RabbitMq;
+namespace DotNetCore.SharpStreamer.Transport.RabbitMq;
 
 public class TransportRabbitMqtService : ITransportService
 {

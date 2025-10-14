@@ -4,7 +4,7 @@ using DotNetCore.SharpStreamer.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.Storage.Npgsql")]
-[assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.RabbitMq")]
+[assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.Transport.RabbitMq")]
 
 namespace DotNetCore.SharpStreamer;
 

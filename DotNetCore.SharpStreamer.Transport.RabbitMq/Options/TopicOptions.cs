@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 #nullable disable
 
-namespace DotNetCore.SharpStreamer.RabbitMq.Options;
+namespace DotNetCore.SharpStreamer.Transport.RabbitMq.Options;
 
 public class TopicOptions
 {

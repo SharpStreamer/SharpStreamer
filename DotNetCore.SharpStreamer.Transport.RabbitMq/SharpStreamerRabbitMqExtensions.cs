@@ -1,7 +1,7 @@
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DotNetCore.SharpStreamer.RabbitMq;
+namespace DotNetCore.SharpStreamer.Transport.RabbitMq;
 
 public static class SharpStreamerRabbitMqExtensions
 {
