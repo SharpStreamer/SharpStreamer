@@ -43,35 +43,7 @@ internal class EventsProcessor(
         {
             try
             {
-                await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
-                IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
-
-                List<ReceivedEvent> events;
-                await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
-                                 $"{options.Value.ConsumerGroup}-{nameof(EventsProcessor)}",
-                                 TimeSpan.FromMinutes(2),
-                                 CancellationToken.None))
-                {
-                    events = await eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
-                }
-
-                foreach (ReceivedEvent receivedEvent in events)
-                {
-                    (Guid id, EventStatus newStatus, string? exceptionMessage) =
-                        await ProcessEvent(receivedEvent, eventsRepository);
-
-                    const string escapeCharForExceptionMessage = "'";
-                    if (id != Guid.Empty)
-                    {
-                        receivedEvent.Status = newStatus;
-                        receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
-                    }
-                }
-
-                if (events.Any())
-                {
-                    await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
-                }
+                await RunProcessor();
             }
             catch (Exception ex)
             {
@@ -81,6 +53,39 @@ internal class EventsProcessor(
             {
                 await timeService.Delay(TimeSpan.FromMilliseconds(1000), CancellationToken.None);
             }
+        }
+    }
+
+    private async Task RunProcessor()
+    {
+        await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
+        IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
+
+        List<ReceivedEvent> events;
+        await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
+                         $"{options.Value.ConsumerGroup}-{nameof(EventsProcessor)}",
+                         TimeSpan.FromMinutes(2),
+                         CancellationToken.None))
+        {
+            events = await eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
+        }
+
+        foreach (ReceivedEvent receivedEvent in events)
+        {
+            (Guid id, EventStatus newStatus, string? exceptionMessage) =
+                await ProcessEvent(receivedEvent, eventsRepository);
+
+            const string escapeCharForExceptionMessage = "'";
+            if (id != Guid.Empty)
+            {
+                receivedEvent.Status = newStatus;
+                receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
+            }
+        }
+
+        if (events.Any())
+        {
+            await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
         }
     }
 

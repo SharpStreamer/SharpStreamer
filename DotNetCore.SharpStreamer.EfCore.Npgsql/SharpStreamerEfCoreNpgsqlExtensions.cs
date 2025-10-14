@@ -29,6 +29,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         services.TryAddSingleton<IDistributedLockProvider, SharpStreamerDistributedLockProviderNpgsql<TDbContext>>();
         services.AddScoped<IEventsRepository, EventsRepository<TDbContext>>();
         services.AddHostedService<EventsProcessor>();
+        services.AddHostedService<EventsPublisher>();
         return services;
     }
 
@@ -138,6 +139,9 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
             entity.Property(e => e.EventKey)
                 .HasMaxLength(500)
                 .IsRequired();
+
+            entity.HasIndex(e => new { e.Status, e.Timestamp })
+                .HasDatabaseName("IX_Events_For_Publishing");
         });
     }
 }

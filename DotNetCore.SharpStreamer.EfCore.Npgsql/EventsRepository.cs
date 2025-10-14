@@ -69,8 +69,19 @@ public class EventsRepository<TDbContext>(
             .Where(r => r.EventKey == eventKey)
             .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None || r.Status == EventStatus.InProgress)
             .Where(r => r.Timestamp < time)
+            .AsNoTracking()
             .Select(r => r.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<PublishedEvent>> GetEventsToPublish(CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task MarkPostPublishAttempt(List<PublishedEvent> events, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)
