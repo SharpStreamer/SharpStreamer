@@ -34,7 +34,6 @@ internal class StreamerBusNpgsql<TDbContext>(
             Content = content,
             Timestamp = currentUtcTime,
             SentAt = currentUtcTime,
-            ExpiresAt = currentUtcTime.AddDays(1),
             RetryCount = 0,
             Status = EventStatus.None,
             Topic = metadata.TopicName,
@@ -55,7 +54,6 @@ internal class StreamerBusNpgsql<TDbContext>(
             Content = content,
             Timestamp = currentUtcTime,
             SentAt = currentUtcTime.Add(delay),
-            ExpiresAt = currentUtcTime.Add(delay).AddDays(1),
             RetryCount = 0,
             Status = EventStatus.None,
             Topic = metadata.TopicName,
@@ -77,7 +75,6 @@ internal class StreamerBusNpgsql<TDbContext>(
             Content = content,
             Timestamp = currentUtcTime,
             SentAt = currentUtcTime,
-            ExpiresAt = currentUtcTime.AddDays(1),
             RetryCount = 0,
             Status = EventStatus.None,
             Topic = metadata.TopicName,
@@ -101,7 +98,6 @@ internal class StreamerBusNpgsql<TDbContext>(
                                 ""RetryCount"",
                                 ""SentAt"",
                                 ""Timestamp"",
-                                ""ExpiresAt"",
                                 ""Status"",
                                 ""EventKey""
                             )
@@ -113,7 +109,6 @@ internal class StreamerBusNpgsql<TDbContext>(
                                 @{nameof(PublishedEvent.RetryCount)},
                                 @{nameof(PublishedEvent.SentAt)},
                                 @{nameof(PublishedEvent.Timestamp)},
-                                @{nameof(PublishedEvent.ExpiresAt)},
                                 @{nameof(PublishedEvent.Status)},
                                 @{nameof(PublishedEvent.EventKey)}
                             );";

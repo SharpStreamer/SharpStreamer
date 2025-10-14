@@ -75,10 +75,6 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasColumnType("timestamptz")
                 .IsRequired();
 
-            entity.Property(e => e.ExpiresAt)
-                .HasColumnType("timestamptz")
-                .IsRequired();
-
             entity.Property(e => e.ErrorMessage)
                 .HasMaxLength(1000)
                 .HasDefaultValue(null)
@@ -141,10 +137,6 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.Property(e => e.EventKey)
                 .HasMaxLength(500)
-                .IsRequired();
-
-            entity.Property(e => e.ExpiresAt)
-                .HasColumnType("timestamptz")
                 .IsRequired();
         });
     }
