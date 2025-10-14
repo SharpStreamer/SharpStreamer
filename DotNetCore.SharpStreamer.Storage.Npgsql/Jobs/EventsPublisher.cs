@@ -43,7 +43,7 @@ public class EventsPublisher(
             }
             finally
             {
-                await timeService.Delay(TimeSpan.FromMilliseconds(1000), CancellationToken.None);
+                await timeService.Delay(TimeSpan.FromMilliseconds(2000), CancellationToken.None);
             }
         }
     }
@@ -63,7 +63,7 @@ public class EventsPublisher(
 
             if (publishedEvents.Any())
             {
-                await transportService.Publish(publishedEvents);
+                await transportService.Publish(publishedEvents, CancellationToken.None);
                 await eventsRepository.MarkPostPublishAttempt(publishedEvents, CancellationToken.None);
             }
         }

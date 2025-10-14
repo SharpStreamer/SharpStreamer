@@ -4,5 +4,5 @@ namespace DotNetCore.SharpStreamer.Services.Abstractions;
 
 public interface ITransportService
 {
-    Task Publish(List<PublishedEvent> publishedEvents);
+    Task Publish(List<PublishedEvent> publishedEvents, CancellationToken cancellationToken = default);
 }

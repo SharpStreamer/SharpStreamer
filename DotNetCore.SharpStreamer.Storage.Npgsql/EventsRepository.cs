@@ -102,7 +102,7 @@ public class EventsRepository<TDbContext>(
     {
         List<Guid> ids = events.Select(e => e.Id).ToList();
 
-        string updateSql = $@"
+        const string updateSql = $@"
                     UPDATE sharp_streamer.published_events
                     SET ""Status"" = 2
                     WHERE ""Id"" = ANY (@ids);";
@@ -111,6 +111,45 @@ public class EventsRepository<TDbContext>(
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
         IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
         await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids }, transaction: dbTransaction);
+    }
+
+    public async Task SaveConsumedEvents(List<ReceivedEvent> receivedEvents, CancellationToken cancellationToken = default)
+    {
+        const string sql = $@"
+                            INSERT INTO sharp_streamer.received_events
+                            (
+                                ""Id"",
+                                ""Group"",
+                                ""Topic"",
+                                ""Content"",
+                                ""RetryCount"",
+                                ""SentAt"",
+                                ""Timestamp"",
+                                ""Status"",
+                                ""ErrorMessage"",
+                                ""UpdateTimestamp"",
+                                ""EventKey"",
+                                ""Partition""
+                            )
+                            VALUES 
+                            (
+                                @{nameof(ReceivedEvent.Id)},
+                                @{nameof(ReceivedEvent.Group)},
+                                @{nameof(ReceivedEvent.Topic)},
+                                @{nameof(ReceivedEvent.Content)}::json,
+                                @{nameof(ReceivedEvent.RetryCount)},
+                                @{nameof(ReceivedEvent.SentAt)},
+                                @{nameof(ReceivedEvent.Timestamp)},
+                                @{nameof(ReceivedEvent.Status)},
+                                @{nameof(ReceivedEvent.ErrorMessage)},
+                                @{nameof(ReceivedEvent.UpdateTimestamp)},
+                                @{nameof(ReceivedEvent.EventKey)},
+                                @{nameof(ReceivedEvent.Partition)}
+                            );";
+        logger.LogInformation($"custom query executed: {sql}");
+        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
+        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
+        await dbConnection.ExecuteAsync(sql: sql, param: receivedEvents, transaction: dbTransaction);
     }
 
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)

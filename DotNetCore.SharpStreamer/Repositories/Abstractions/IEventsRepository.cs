@@ -13,4 +13,6 @@ public interface IEventsRepository
     Task<List<PublishedEvent>> GetEventsToPublish(CancellationToken cancellationToken = default);
 
     Task MarkPostPublishAttempt(List<PublishedEvent> events, CancellationToken cancellationToken = default);
+
+    Task SaveConsumedEvents(List<ReceivedEvent> receivedEvents, CancellationToken cancellationToken = default);
 }
