@@ -10,4 +10,11 @@
       <ProjectReference Include="..\DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <PackageId>DotNetCore.SharpStreamer.Transport.Npgsql</PackageId>
+        <Version>1.1.0</Version>
+        <Authors>SandrikaMgeli</Authors>
+        <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
+    </PropertyGroup>
+
 </Project>
