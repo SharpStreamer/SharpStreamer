@@ -16,7 +16,7 @@ builder.Services.AddDbContext<RabbitNpgDbContext>(options =>
 });
 builder.Services
     .AddSharpStreamer("SharpStreamerSettings", Assembly.GetExecutingAssembly())
-    .AddSharpStreamerNpgsql<RabbitNpgDbContext>()
+    .AddSharpStreamerStorageNpgsql<RabbitNpgDbContext>()
     .AddSharpStreamerRabbitMq();
 
 var app = builder.Build();

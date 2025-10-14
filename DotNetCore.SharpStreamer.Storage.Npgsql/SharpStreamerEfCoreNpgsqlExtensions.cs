@@ -21,11 +21,10 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         return string.Join(',', values.Select(status => $"{status} = {(int)status}"));
     }
 
-    public static IServiceCollection AddSharpStreamerNpgsql<TDbContext>(this IServiceCollection services)
+    public static IServiceCollection AddSharpStreamerStorageNpgsql<TDbContext>(this IServiceCollection services)
         where TDbContext : DbContext
     {
         services.AddScoped<IStreamerBus, StreamerBusNpgsql<TDbContext>>();
-        services.AddScoped<IConsumerService, ConsumerNpgsqlService<TDbContext>>();
         services.TryAddSingleton<IDistributedLockProvider, SharpStreamerDistributedLockProviderNpgsql<TDbContext>>();
         services.AddScoped<IEventsRepository, EventsRepository<TDbContext>>();
         services.AddHostedService<EventsProcessor>();
