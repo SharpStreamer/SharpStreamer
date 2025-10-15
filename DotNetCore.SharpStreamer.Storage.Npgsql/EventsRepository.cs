@@ -146,7 +146,7 @@ public class EventsRepository<TDbContext>(
                                 @{nameof(ReceivedEvent.EventKey)},
                                 @{nameof(ReceivedEvent.Partition)}
                             )
-                            ON CONFLICT DO NOTHING;";
+                            ON CONFLICT (""Id"") DO NOTHING;";
         logger.LogInformation($"custom query executed: {sql}");
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
         IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
