@@ -14,21 +14,25 @@ public class TransportServiceNpgsql(
 {
     public async Task Publish(List<PublishedEvent> publishedEvents, CancellationToken cancellationToken)
     {
-        List<ReceivedEvent> receivedEvents = publishedEvents.Select(p =>
+        DateTimeOffset currentTime = timeService.GetUtcNow();
+        List<ReceivedEvent> receivedEvents = publishedEvents.Select((publishedEvent,index) =>
             new ReceivedEvent()
             {
-                Id = p.Id,
+                Id = publishedEvent.Id,
                 Group = sharpStreamerOptions.Value.ConsumerGroup,
                 ErrorMessage = null,
                 UpdateTimestamp = null,
                 Partition = null,
-                Topic = p.Topic,
-                Content = p.Content,
+                Topic = publishedEvent.Topic,
+                Content = publishedEvent.Content,
                 RetryCount = 0,
-                SentAt = p.SentAt,
-                Timestamp = timeService.GetUtcNow(),
+                SentAt = publishedEvent.SentAt,
+
+                // Makes sure that because of fast processing, all received event won't have same Timestamp, because predecessors
+                // ordering is based on Timestamp, and we should be sure that in same batch, we will have correctly ordered timestamps.
+                Timestamp = currentTime.AddMilliseconds(index),
                 Status = EventStatus.None,
-                EventKey = p.EventKey,
+                EventKey = publishedEvent.EventKey,
             }).ToList();
 
         await eventsRepository.SaveConsumedEvents(receivedEvents, cancellationToken);
