@@ -24,6 +24,21 @@
   If you require ordered processing, you should use immediate events with deterministic keys instead.
 
   This design helps keep event processing predictable and prevents unintended blocking or ordering issues in your system.
+* How to configure:
+    * In DbContext's OnModelCreating method add following line and run AddMigration to add necessary tables in database
+      *     protected override void OnModelCreating(ModelBuilder modelBuilder)
+            {
+                modelBuilder.ConfigureSharpStreamerNpgsql();
+                base.OnModelCreating(modelBuilder);
+            }
+    * Configure DI like this:
+      *     builder.Services
+                .AddSharpStreamer("YourSettingsName", Assembly.GetExecutingAssembly())
+                .AddSharpStreamerStorageNpgsql<YourDbContext>()
+                .AddSharpStreamerTransportNpgsql();
+    * After this configuration you can freely use IStreamerBus. IStreamerBus is scoped service and uses YourDbContext, 
+      so if you start Transaction in the scope of
+      YourDbContext, IStreamerBus will use this transaction too.
 * Package publishing instructions:
     * Navigate into class library project where you want to publish package
     * Then pack this project in release mode:
