@@ -10,4 +10,8 @@
       <ProjectReference Include="..\DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Confluent.Kafka" Version="2.12.0" />
+    </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@ using System.Reflection;
 using DotNetCore.SharpStreamer;
 using DotNetCore.SharpStreamer.Kafka.Npgsql;
 using DotNetCore.SharpStreamer.Storage.Npgsql;
+using DotNetCore.SharpStreamer.Transport.Kafka;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,8 @@ builder.Services.AddDbContext<KafkaNpgDbContext>(options =>
 });
 builder.Services
     .AddSharpStreamer("SharpStreamerSettings", Assembly.GetExecutingAssembly())
-    .AddSharpStreamerStorageNpgsql<KafkaNpgDbContext>();
+    .AddSharpStreamerStorageNpgsql<KafkaNpgDbContext>()
+    .AddSharpStreamerTransportKafka();
 
 var app = builder.Build();
 
