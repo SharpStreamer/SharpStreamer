@@ -100,6 +100,10 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.HasIndex(e => new { e.Status, e.UpdateTimestamp, e.RetryCount })
                 .HasDatabaseName("IX_Events_For_Processing");
+
+            entity.HasIndex(e => new { e.Timestamp })
+                .HasDatabaseName("IX_ReceivedEvents_Timestamp")
+                .HasMethod("BRIN");
         });
     }
 
@@ -141,6 +145,10 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.HasIndex(e => new { e.Status, e.SentAt })
                 .HasDatabaseName("IX_Events_For_Publishing");
+
+            entity.HasIndex(e => new { e.Timestamp })
+                .HasDatabaseName("IX_PublishedEvents_Timestamp")
+                .HasMethod("BRIN");
         });
     }
 }

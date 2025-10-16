@@ -59,6 +59,11 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Timestamp")
+                        .HasDatabaseName("IX_PublishedEvents_Timestamp");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Timestamp"), "BRIN");
+
                     b.HasIndex("Status", "SentAt")
                         .HasDatabaseName("IX_Events_For_Publishing");
 
@@ -117,6 +122,11 @@ namespace DotNetCore.SharpStreamer.RabbitMq.Npgsql.Migrations
                         .HasColumnType("timestamptz");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Timestamp")
+                        .HasDatabaseName("IX_ReceivedEvents_Timestamp");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Timestamp"), "BRIN");
 
                     b.HasIndex("EventKey", "Status", "Timestamp")
                         .HasDatabaseName("IX_EventKey_Status")
