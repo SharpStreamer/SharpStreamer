@@ -21,7 +21,6 @@ internal class EventsProcessor(
     ICacheService cacheService,
     IOptions<SharpStreamerOptions> options,
     IServiceScopeFactory serviceScopeFactory,
-    IMediator mediator,
     ILogger<EventsProcessor> logger)
     : BackgroundService
 {
@@ -120,7 +119,11 @@ internal class EventsProcessor(
                 throw new ArgumentException($"Because of unknown reason deserialized event was null. event body: {rawEventBody}");
             }
 
-            await mediator.Send(@event, CancellationToken.None);
+            await using (AsyncServiceScope processingScope = serviceScopeFactory.CreateAsyncScope())
+            {
+                IMediator mediator = processingScope.ServiceProvider.GetRequiredService<IMediator>();
+                await mediator.Send(@event, CancellationToken.None);
+            }
 
             logger.LogInformation($"{consumerMetadata.EventType.Name} was handled successfully.");
             return (receivedEvent.Id, EventStatus.Succeeded, null);
