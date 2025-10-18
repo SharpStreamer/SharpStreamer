@@ -1,11 +1,30 @@
 ﻿using Confluent.Kafka;
+using DotNetCore.SharpStreamer.Options;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace DotNetCore.SharpStreamer.Transport.Kafka;
 
-public class KafkaConsumer : BackgroundService
+public class KafkaConsumer(
+    IOptions<SharpStreamerOptions> sharpStreamerOptions,
+    IOptions<KafkaOptions> kafkaOptions) : BackgroundService
 {
-    protected async override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (sharpStreamerOptions.Value.ConsumerThreadCount == 0)
+        {
+            throw new ArgumentException("When dealing with kafka, consumer thread count must be greater than zero.");
+        }
+
+        List<Task> consumerTasks = new();
+        for (int i = 0; i < sharpStreamerOptions.Value.ConsumerThreadCount; i++)
+        {
+            consumerTasks.Add(Task.Run(async () => await RunConsumer(), stoppingToken));
+        }
+        await Task.WhenAll(consumerTasks);
+    }
+
+    private async Task RunConsumer()
     {
         var config = new ConsumerConfig
         {
