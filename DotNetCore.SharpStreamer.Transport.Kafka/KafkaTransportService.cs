@@ -44,7 +44,7 @@ public class KafkaTransportService : ITransportService, IDisposable
         await Parallel.ForEachAsync(publishedEventGroupedWithEventKeys, 
             new ParallelOptions
             {
-                MaxDegreeOfParallelism = _sharpStreamerOptions.Value.ProcessorThreadCount, 
+                MaxDegreeOfParallelism = _kafkaOptions.Value.ProducersCount, 
                 CancellationToken = CancellationToken.None
             },
             async (indexToEventsMapping, token) =>
