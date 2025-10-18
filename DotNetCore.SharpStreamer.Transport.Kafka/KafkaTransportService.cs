@@ -49,13 +49,14 @@ public class KafkaTransportService : ITransportService, IDisposable
             },
             async (indexToEventsMapping, token) =>
             {
+                int producerIndex = indexToEventsMapping.index % _kafkaOptions.Value.ProducersCount;
+                IProducer<string, string> producer = _producers[producerIndex];
                 foreach (PublishedEvent publishedEvent in indexToEventsMapping.events)
                 {
-                    int producerIndex = indexToEventsMapping.index % _kafkaOptions.Value.ProducersCount;
                     Headers eventHeaders = new Headers();
                     eventHeaders.Add(nameof(PublishedEvent.Id), Encoding.UTF8.GetBytes(publishedEvent.Id.ToString()));
                     eventHeaders.Add(nameof(PublishedEvent.SentAt), Encoding.UTF8.GetBytes(publishedEvent.SentAt.ToString()));
-                    await _producers[producerIndex].ProduceAsync(
+                    await producer.ProduceAsync(
                         publishedEvent.Topic,
                         new Message<string, string>()
                         {
