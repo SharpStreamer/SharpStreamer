@@ -19,6 +19,9 @@ public class SharpStreamerOptions
     /// </summary>
     public int ConsumerThreadCount { get; set; }
 
+    /// <summary>
+    /// Determines, how many messages will be selected from Database for processing.
+    /// </summary>
     [Required]
     public int ProcessingBatchSize { get; set; }
 }
