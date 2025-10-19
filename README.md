@@ -1,3 +1,6 @@
+* KAFKA
+    * In case of kafka, topics defined in appsettings, must be pre-created in kafka. library doesn't handle topic creation on it's own
+      and it needs to be predefined.
 * Delayed events WARNING:
       
   The library provides built-in support for delayed event publishing, allowing you to schedule an event to be published after a specific period of time.
