@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Confluent.Kafka;
 using DotNetCore.SharpStreamer.Entities;
-using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.Extensions.Options;
 
