@@ -10,14 +10,11 @@ namespace DotNetCore.SharpStreamer.Transport.Kafka;
 public class KafkaTransportService : ITransportService, IDisposable
 {
     private readonly List<IProducer<string, string>> _producers;
-    private readonly IOptions<SharpStreamerOptions> _sharpStreamerOptions;
     private readonly IOptions<KafkaOptions> _kafkaOptions;
     public KafkaTransportService(
-        IOptions<SharpStreamerOptions> sharpStreamerOptions,
         IOptions<KafkaOptions> kafkaOptions)
     {
         _kafkaOptions = kafkaOptions;
-        _sharpStreamerOptions = sharpStreamerOptions;
         ProducerConfig producerConfig = new()
         {
             BootstrapServers = kafkaOptions.Value.Servers,
