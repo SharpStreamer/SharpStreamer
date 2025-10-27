@@ -12,7 +12,7 @@ builder.Services.AddOpenApi("docs");
 
 builder.Services.AddDbContext<KafkaNpgDbContext>(options =>
 {
-    options.UseNpgsql("Pooling=True;Maximum Pool Size=100;Minimum Pool Size=1;Connection Idle Lifetime=60;Host=localhost;Port=5433;Database=npg_npg_sample;Username=admin;Password=admin");
+    options.UseNpgsql("Pooling=True;Maximum Pool Size=100;Minimum Pool Size=1;Connection Idle Lifetime=60;Host=localhost;Port=5433;Database=kafka_npg_sample;Username=admin;Password=admin");
 });
 builder.Services
     .AddSharpStreamer("SharpStreamerSettings", Assembly.GetExecutingAssembly())
