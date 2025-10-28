@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System.Diagnostics;
+using Confluent.Kafka;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Options;
@@ -75,15 +76,44 @@ public class KafkaConsumer(
     {
         try
         {
+            ConsumeResult<string, string>? previous = null;
             int commitCounter = 0;
             List<ReceivedEvent> receivedEvents = new();
+            Stopwatch  stopwatch = new();
+            stopwatch.Start();
             while (!stoppingToken.IsCancellationRequested)
             {
-                ConsumeResult<string,string> cr = consumer.Consume(stoppingToken);
+                ConsumeResult<string,string> cr = consumer.Consume(TimeSpan.FromSeconds(1));
 
+                if (cr is null)
+                {
+                    if (previous is not null && await CommitIfNecessary(stopwatch, receivedEvents, consumer, previous, eventsRepository))
+                    {
+                        commitCounter = 0;
+                        stopwatch.Restart();
+                        previous = null;
+                        receivedEvents.Clear();
+                    }
 
-                commitCounter = await CommitIfNecessary(commitCounter, receivedEvents, consumer, cr, eventsRepository);
+                    continue;
+                }
+
+                commitCounter++;
+                receivedEvents.Add(BuildReceivedEventEntity(cr));
+                if (await CommitIfNecessary(commitCounter, receivedEvents, consumer, cr, eventsRepository))
+                {
+                    commitCounter = 0;
+                    stopwatch.Restart();
+                    previous = null;
+                    receivedEvents.Clear();
+                }
+                else
+                {
+                    previous = cr;
+                }
             }
+
+            stoppingToken.ThrowIfCancellationRequested();
         }
         catch (OperationCanceledException ex)
         {
@@ -95,24 +125,42 @@ public class KafkaConsumer(
         }
     }
 
-    private async Task<int> CommitIfNecessary(
+    private async Task<bool> CommitIfNecessary(
         int counter,
         List<ReceivedEvent> receivedEvents,
         IConsumer<string, string> consumer,
         ConsumeResult<string, string> cr,
         IEventsRepository eventsRepository)
     {
-        counter++;
-        receivedEvents.Add(BuildReceivedEventEntity(cr));
         if (counter == kafkaOptions.Value.CommitBatchSize)
         {
-            await SaveConsumedEvents(receivedEvents, eventsRepository);
-            consumer.Commit(cr);
-            receivedEvents.Clear();
-            counter = 0;
+            await SaveAndCommit(receivedEvents, consumer, cr, eventsRepository);
+            return true;
         }
 
-        return counter;
+        return false;
+    }
+
+    private async Task<bool> CommitIfNecessary(
+        Stopwatch stopwatch,
+        List<ReceivedEvent> receivedEvents,
+        IConsumer<string, string> consumer,
+        ConsumeResult<string, string> previous,
+        IEventsRepository eventsRepository)
+    {
+        if (stopwatch.Elapsed >= TimeSpan.FromSeconds(kafkaOptions.Value.CommitTimespanSeconds))
+        {
+            await SaveAndCommit(receivedEvents, consumer, previous, eventsRepository);
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task SaveAndCommit(List<ReceivedEvent> receivedEvents, IConsumer<string, string> consumer, ConsumeResult<string, string> cr, IEventsRepository eventsRepository)
+    {
+        await SaveConsumedEvents(receivedEvents, eventsRepository);
+        consumer.Commit(cr);
     }
 
     private async Task SaveConsumedEvents(List<ReceivedEvent> receivedEvents, IEventsRepository eventsRepository)

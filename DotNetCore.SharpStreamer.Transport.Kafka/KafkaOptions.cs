@@ -23,6 +23,14 @@ public class KafkaOptions
     public int CommitBatchSize { get; set; }
 
     /// <summary>
+    /// Commits kafka, if not commited for 'CommitTimespanSeconds' amount of seconds.
+    /// If there were 'CommitBatchSize' amount of messages consumed without commiting, then it will commit or if there
+    /// was not commited messages for 'CommitTimespanSeconds'.
+    /// </summary>
+    [Required]
+    public int CommitTimespanSeconds { get; set; }
+
+    /// <summary>
     /// Determines connections count, how many connection will be created for producing events
     /// </summary>
     [Required]
