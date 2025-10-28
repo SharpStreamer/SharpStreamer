@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Tr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Kafka.Npgsql", "DotNetCore.SharpStreamer.Kafka.Npgsql\DotNetCore.SharpStreamer.Kafka.Npgsql.csproj", "{8538C974-2224-423D-8D89-2C7848A100B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Transport.Nats", "DotNetCore.SharpStreamer.Transport.Nats\DotNetCore.SharpStreamer.Transport.Nats.csproj", "{9234D974-E90F-4727-B8E6-F0E7E53B9CD4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Transport.RabbitMq", "DotNetCore.SharpStreamer.Transport.RabbitMq\DotNetCore.SharpStreamer.Transport.RabbitMq.csproj", "{9234D974-E90F-4727-B8E6-F0E7E53B9CD4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
