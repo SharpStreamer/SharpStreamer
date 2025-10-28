@@ -76,7 +76,7 @@ public class KafkaConsumer(
     {
         try
         {
-            ConsumeResult<string, string> previous = null;
+            ConsumeResult<string, string>? previous = null;
             int commitCounter = 0;
             List<ReceivedEvent> receivedEvents = new();
             Stopwatch  stopwatch = new();
@@ -92,17 +92,20 @@ public class KafkaConsumer(
                         commitCounter = 0;
                         stopwatch.Restart();
                         previous = null;
+                        receivedEvents.Clear();
                     }
 
                     continue;
                 }
 
                 commitCounter++;
+                receivedEvents.Add(BuildReceivedEventEntity(cr));
                 if (await CommitIfNecessary(commitCounter, receivedEvents, consumer, cr, eventsRepository))
                 {
                     commitCounter = 0;
                     stopwatch.Restart();
                     previous = null;
+                    receivedEvents.Clear();
                 }
                 else
                 {
@@ -129,7 +132,6 @@ public class KafkaConsumer(
         ConsumeResult<string, string> cr,
         IEventsRepository eventsRepository)
     {
-        receivedEvents.Add(BuildReceivedEventEntity(cr));
         if (counter == kafkaOptions.Value.CommitBatchSize)
         {
             await SaveAndCommit(receivedEvents, consumer, cr, eventsRepository);
@@ -159,7 +161,6 @@ public class KafkaConsumer(
     {
         await SaveConsumedEvents(receivedEvents, eventsRepository);
         consumer.Commit(cr);
-        receivedEvents.Clear();
     }
 
     private async Task SaveConsumedEvents(List<ReceivedEvent> receivedEvents, IEventsRepository eventsRepository)
