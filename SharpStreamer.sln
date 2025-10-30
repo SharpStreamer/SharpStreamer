@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Ka
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.Transport.RabbitMq", "DotNetCore.SharpStreamer.Transport.RabbitMq\DotNetCore.SharpStreamer.Transport.RabbitMq.csproj", "{9234D974-E90F-4727-B8E6-F0E7E53B9CD4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCore.SharpStreamer.RabbitMq.Npgsql", "DotNetCore.SharpStreamer.RabbitMq.Npgsql\DotNetCore.SharpStreamer.RabbitMq.Npgsql.csproj", "{BBE9F226-B514-4BA0-8763-CB81A90EB373}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{9234D974-E90F-4727-B8E6-F0E7E53B9CD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9234D974-E90F-4727-B8E6-F0E7E53B9CD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9234D974-E90F-4727-B8E6-F0E7E53B9CD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBE9F226-B514-4BA0-8763-CB81A90EB373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBE9F226-B514-4BA0-8763-CB81A90EB373}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBE9F226-B514-4BA0-8763-CB81A90EB373}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBE9F226-B514-4BA0-8763-CB81A90EB373}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{4612E613-656C-451F-84C4-7F4A718B53AF} = {2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}
@@ -68,5 +74,6 @@ Global
 		{8012E311-AF3D-4EA9-B88A-A6A3F82BB6FB} = {2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}
 		{8538C974-2224-423D-8D89-2C7848A100B6} = {10B13595-FECA-4B3A-BE6F-EE83B3B0F4E3}
 		{9234D974-E90F-4727-B8E6-F0E7E53B9CD4} = {2D4B6DEC-6A25-4AA9-914A-8EE8459C2CC9}
+		{BBE9F226-B514-4BA0-8763-CB81A90EB373} = {10B13595-FECA-4B3A-BE6F-EE83B3B0F4E3}
 	EndGlobalSection
 EndGlobal
