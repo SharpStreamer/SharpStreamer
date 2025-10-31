@@ -37,7 +37,7 @@ public class RabbitTransportService(
         };
         ReadOnlyMemory<byte> body = Encoding.UTF8.GetBytes(publishedEvent.Content);
         await channel.BasicPublishAsync(
-            new PublicationAddress(ExchangeType.Fanout, publishedEvent.Topic, ""),
+            new PublicationAddress(ExchangeType.Fanout, publishedEvent.Topic, publishedEvent.EventKey),
             basicProperties: properties,
             body: body,
             cancellationToken: cancellationToken);

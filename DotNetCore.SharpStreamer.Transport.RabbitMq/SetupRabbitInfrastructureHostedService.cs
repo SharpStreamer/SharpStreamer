@@ -20,7 +20,6 @@ internal class SetupRabbitInfrastructureHostedService(
         {
             IConnection connection = await rabbitConnectionProvider.GetConnectionAsync();
             await using IChannel channel = await connection.CreateChannelAsync(cancellationToken: stoppingToken);
-            await DeclareQueue(channel, stoppingToken);
             await DeclareExchanges(channel, stoppingToken);
         }
         catch (Exception e)
@@ -51,20 +50,5 @@ internal class SetupRabbitInfrastructureHostedService(
                 noWait: false, 
                 cancellationToken: stoppingToken);
         }
-    }
-
-    private async Task DeclareQueue(IChannel channel, CancellationToken stoppingToken)
-    {
-        await channel.QueueDeclareAsync(
-            queue: sharpStreamerOptions.Value.ConsumerGroup,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: new Dictionary<string, object?>()
-            {
-                { "x-single-active-consumer", true }
-            },
-            noWait: false,
-            cancellationToken: stoppingToken);
     }
 }
