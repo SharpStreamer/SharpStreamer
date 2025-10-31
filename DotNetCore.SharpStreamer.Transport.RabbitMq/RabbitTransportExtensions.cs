@@ -19,7 +19,7 @@ public static class RabbitTransportExtensions
             .ValidateOnStart();
         services.AddSingleton<RabbitConnectionProvider>();
         services.AddHostedService<SetupRabbitInfrastructureHostedService>();
-        services.AddSingleton<ITransportService, RabbitTransportService>();
+        services.AddScoped<ITransportService, RabbitTransportService>();
         return services;
     }
 }
