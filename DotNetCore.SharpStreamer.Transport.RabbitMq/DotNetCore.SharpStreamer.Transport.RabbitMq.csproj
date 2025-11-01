@@ -14,4 +14,10 @@
       <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <PackageId>DotNetCore.SharpStreamer.Transport.RabbitMq</PackageId>
+        <Version>1.1.1</Version>
+        <Authors>SandrikaMgeli</Authors>
+        <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
+    </PropertyGroup>
 </Project>
