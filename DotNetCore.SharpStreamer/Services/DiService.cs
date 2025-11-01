@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Services.Abstractions;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -16,11 +17,12 @@ internal class DiService(ICacheService cacheService)
     public IServiceCollection AddSharpStreamer(IServiceCollection services, string configurationSection, params Assembly[] addFromAssemblies)
     {
         ConfigurationSectionName = configurationSection;
-        services.AddMediatR(options =>
+        bool mediatorExists = services.Any(x => x.ServiceType == typeof(IMediator));
+        if (!mediatorExists)
         {
-            options.RegisterServicesFromAssemblies(addFromAssemblies);
-            options.Lifetime = ServiceLifetime.Transient;
-        });
+            throw new InvalidOperationException(
+                $"Mediator doesn't exist. please implement IMediator interface before calling {nameof(AddSharpStreamer)})");
+        }
         services.AddSingleton<ICacheService>(cacheService);
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IIdGenerator, UlidGenerator>();
