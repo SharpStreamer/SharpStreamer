@@ -35,7 +35,12 @@
                 base.OnModelCreating(modelBuilder);
             }
     * Configure DI like this:
-      *     builder.Services
+      *     builder.Services.AddMediatR(options =>
+            {
+                options.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
+                options.Lifetime = ServiceLifetime.Transient;
+            });
+            builder.Services
                 .AddSharpStreamer("YourSettingsName", Assembly.GetExecutingAssembly())
                 .AddSharpStreamerStorageNpgsql<YourDbContext>()
                 .AddSharpStreamerTransportNpgsql();
