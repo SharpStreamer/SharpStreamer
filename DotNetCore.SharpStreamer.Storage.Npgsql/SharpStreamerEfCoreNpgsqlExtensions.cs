@@ -29,6 +29,8 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         services.AddScoped<IEventsRepository, EventsRepository<TDbContext>>();
         services.AddHostedService<EventsProcessor>();
         services.AddHostedService<EventsPublisher>();
+        services.AddHostedService<ProcessedEventsCleaner>();
+        services.AddHostedService<ProducedEventsCleaner>();
         return services;
     }
 
