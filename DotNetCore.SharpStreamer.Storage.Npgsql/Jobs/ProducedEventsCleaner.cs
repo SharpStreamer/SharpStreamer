@@ -22,7 +22,7 @@ public class ProducedEventsCleaner(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in processing events");
+                logger.LogError(ex, $"Error in {nameof(ProducedEventsCleaner)}");
             }
             finally
             {
