@@ -1,3 +1,5 @@
+using DotNetCore.SharpStreamer.Entities;
+using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,5 +37,14 @@ public class ProcessedEventsCleaner(
     {
         await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
+
+        List<ReceivedEvent> receivedEvents = await eventsRepository.GetReceivedEventsByStatusAndElapsedTimespan(
+            EventStatus.Succeeded,
+            TimeSpan.FromDays(1));
+
+        if (receivedEvents.Any())
+        {
+            await eventsRepository.DeleteReceivedEventsById(receivedEvents.Select(e => e.Id).ToList());
+        }
     }
 }

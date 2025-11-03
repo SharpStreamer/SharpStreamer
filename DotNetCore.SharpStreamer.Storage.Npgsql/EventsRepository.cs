@@ -153,6 +153,48 @@ public class EventsRepository<TDbContext>(
         await dbConnection.ExecuteAsync(sql: sql, param: receivedEvents, transaction: dbTransaction);
     }
 
+    public async Task<List<PublishedEvent>> GetProducedEventsByStatusAndElapsedTimespan(
+        EventStatus eventStatus,
+        TimeSpan timeSpan,
+        CancellationToken cancellationToken = default)
+    {
+        DateTimeOffset cutOffTime = timeService.GetUtcNow().Subtract(timeSpan);
+        return await dbContext.Set<PublishedEvent>()
+            .Where(e => e.Status == eventStatus)
+            .Where(e => e.SentAt <= cutOffTime)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<ReceivedEvent>> GetReceivedEventsByStatusAndElapsedTimespan(
+        EventStatus eventStatus,
+        TimeSpan timeSpan,
+        CancellationToken cancellationToken = default)
+    {
+        DateTimeOffset cutOffTime = timeService.GetUtcNow().Subtract(timeSpan);
+        return await dbContext.Set<ReceivedEvent>()
+            .Where(e => e.Status == eventStatus)
+            .Where(e => e.UpdateTimestamp <= cutOffTime)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task DeleteProducedEventsById(List<Guid> eventIds, CancellationToken cancellationToken = default)
+    {
+        await dbContext.Set<PublishedEvent>()
+            .Where(e => eventIds.Contains(e.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task DeleteReceivedEventsById(
+        List<Guid> eventIds,
+        CancellationToken cancellationToken = default)
+    {
+        await dbContext.Set<ReceivedEvent>()
+            .Where(e => eventIds.Contains(e.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)
     {
         if (receivedEvent.ErrorMessage is null)
