@@ -19,24 +19,24 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
 {
     private readonly DbContext _dbContext;
     private readonly Fixture _fixture;
-    EventsRepository<PostgresTestingDbContext> _eventsRepository;
-    private readonly ILogger<EventsRepository<PostgresTestingDbContext>> logger;
-    private readonly IOptions<SharpStreamerOptions> sharpStreamerOptions;
-    private readonly ITimeService timeService;
+    private readonly EventsRepository<PostgresTestingDbContext> _eventsRepository;
+    private readonly ILogger<EventsRepository<PostgresTestingDbContext>> _logger;
+    private readonly IOptions<SharpStreamerOptions> _sharpStreamerOptions;
+    private readonly ITimeService _timeService;
     public EventsRepositoryTests(
         PostgresDbFixture postgresDbFixture,
         DataFixtureConfig dataFixtureConfig)
     {
         _dbContext = postgresDbFixture.DbContext;
         _fixture = dataFixtureConfig.Fixture;
-        logger = Substitute.For<ILogger<EventsRepository<PostgresTestingDbContext>>>();
-        sharpStreamerOptions = Substitute.For<IOptions<SharpStreamerOptions>>();
-        timeService = Substitute.For<ITimeService>();
+        _logger = Substitute.For<ILogger<EventsRepository<PostgresTestingDbContext>>>();
+        _sharpStreamerOptions = Substitute.For<IOptions<SharpStreamerOptions>>();
+        _timeService = Substitute.For<ITimeService>();
         _eventsRepository = new EventsRepository<PostgresTestingDbContext>(
             (PostgresTestingDbContext)postgresDbFixture.DbContext,
-            logger,
-            sharpStreamerOptions,
-            timeService);
+            _logger,
+            _sharpStreamerOptions,
+            _timeService);
     }
 
     [Fact]
@@ -44,8 +44,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
     {
         // Arrange
         DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
-        timeService.GetUtcNow().Returns(currentTime);
-        sharpStreamerOptions.Value.Returns(new SharpStreamerOptions()
+        _timeService.GetUtcNow().Returns(currentTime);
+        _sharpStreamerOptions.Value.Returns(new SharpStreamerOptions()
         {
             ProcessingBatchSize = 10
         });
@@ -74,8 +74,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
     {
         // Arrange
         DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
-        timeService.GetUtcNow().Returns(currentTime);
-        sharpStreamerOptions.Value.Returns(new SharpStreamerOptions()
+        _timeService.GetUtcNow().Returns(currentTime);
+        _sharpStreamerOptions.Value.Returns(new SharpStreamerOptions()
         {
             ProcessingBatchSize = 3
         });
@@ -106,8 +106,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
     {
         // Arrange
         DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
-        timeService.GetUtcNow().Returns(currentTime);
-        sharpStreamerOptions.Value.Returns(new SharpStreamerOptions()
+        _timeService.GetUtcNow().Returns(currentTime);
+        _sharpStreamerOptions.Value.Returns(new SharpStreamerOptions()
         {
             ProcessingBatchSize = 3
         });
@@ -127,7 +127,7 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         await _dbContext.SaveChangesAsync();
 
         // Assert
-        List<ReceivedEvent> returnedEvents = await _eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
+        await _eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
 
         // Act
         _dbContext.ChangeTracker.Clear(); // To retrieve fresh data.
@@ -145,16 +145,49 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         }
     }
 
+    [Fact]
+    public async Task MarkPostProcessing_MarksPassedEvents()
+    {
+        // Arrange
+        DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
+        _timeService.GetUtcNow().Returns(currentTime);
+        List<ReceivedEvent> receivedEvents = _fixture.CreateMany<ReceivedEvent>(3).ToList();
+        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
+        await _dbContext.SaveChangesAsync();
+
+        receivedEvents[0].Status = EventStatus.Failed;
+        receivedEvents[0].ErrorMessage = "Error message 1";
+
+        receivedEvents[1].Status = EventStatus.Succeeded;
+        receivedEvents[1].ErrorMessage = null;
+
+        receivedEvents[2].Status = EventStatus.Failed;
+        receivedEvents[2].ErrorMessage = null;
+    
+        // Assert
+        await _eventsRepository.MarkPostProcessing(receivedEvents);
+
+        // Act
+        _dbContext.ChangeTracker.Clear(); // To retrieve fresh data.
+        List<ReceivedEvent> dbEvents = await _dbContext.Set<ReceivedEvent>().ToListAsync();
+
+        dbEvents.Single(r => r.Id == receivedEvents[0].Id).Status.Should().Be(EventStatus.Failed);
+        dbEvents.Single(r => r.Id == receivedEvents[0].Id).ErrorMessage.Should().Be("Error message 1");
+
+        dbEvents.Single(r => r.Id == receivedEvents[1].Id).Status.Should().Be(EventStatus.Succeeded);
+        dbEvents.Single(r => r.Id == receivedEvents[1].Id).ErrorMessage.Should().Be(null);
+
+        dbEvents.Single(r => r.Id == receivedEvents[2].Id).Status.Should().Be(EventStatus.Failed);
+        dbEvents.Single(r => r.Id == receivedEvents[2].Id).ErrorMessage.Should().Be(null);
+    }
+
     /// <summary>
     ///     Generates events, last 5 of them should be processed and also first should be processed.
     ///     Other ones should not be processed
     /// </summary>
     private List<ReceivedEvent> InitializeReceivedEventsForProcessingTest(DateTimeOffset currentTime)
     {
-        List<ReceivedEvent> receivedEvents = _fixture.Build<ReceivedEvent>()
-            .With(r => r.Content, @"{""data"" : null}")
-            .CreateMany<ReceivedEvent>(10)
-            .ToList();
+        List<ReceivedEvent> receivedEvents = _fixture.CreateMany<ReceivedEvent>(10).ToList();
         for (int i = 0; i < 5; i++)
         {
             receivedEvents[i].Status = EventStatus.Failed;

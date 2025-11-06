@@ -60,7 +60,7 @@ public class EventsRepository<TDbContext>(
                         ""UpdateTimestamp"" = @UpdateTimestamp
                     WHERE ""Id"" = ANY (@ids);";
 
-        logger.LogInformation($"custom query executed: {updateSql}");
+        logger.LogDebug($"custom query executed: {updateSql}");
         IDbConnection dbConnection = dbContext.Database.GetDbConnection();
         IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
         await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids, UpdateTimestamp = timeService.GetUtcNow() }, transaction: dbTransaction);
