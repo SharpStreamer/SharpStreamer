@@ -22,24 +22,44 @@ public class EventsRepository<TDbContext>(
     public async Task<List<ReceivedEvent>> GetAndMarkEventsForProcessing(CancellationToken cancellationToken = default)
     {
         DateTimeOffset cutOffTime = timeService.GetUtcNow().AddSeconds(-20);
-        List<ReceivedEvent> @events = await dbContext.Set<ReceivedEvent>()
-            .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None)
-            .Where(r => r.UpdateTimestamp == null || r.UpdateTimestamp < cutOffTime)
-            .Where(r => r.RetryCount < 50)
-            .OrderBy(r => r.Timestamp)
-            .Take(sharpStreamerOptions.Value.ProcessingBatchSize)
+        const string retrieveQuery = @"
+                                        SELECT
+                                            r.""Id"",
+                                            r.""Content"",
+                                            r.""ErrorMessage"",
+                                            r.""EventKey"",
+                                            r.""Group"",
+                                            r.""Partition"",
+                                            r.""RetryCount"",
+                                            r.""SentAt"",
+                                            r.""Status"",
+                                            r.""Timestamp"",
+                                            r.""Topic"",
+                                            r.""UpdateTimestamp""
+                                        FROM sharp_streamer.received_events AS r
+                                        WHERE r.""Status"" IN (3, 0) AND (r.""UpdateTimestamp"" IS NULL OR r.""UpdateTimestamp"" < {0}) AND r.""RetryCount"" < 50
+                                        ORDER BY r.""Timestamp""
+                                        LIMIT {1};";
+
+        List<ReceivedEvent> @events = await dbContext.Database.SqlQueryRaw<ReceivedEvent>(
+            sql: retrieveQuery,
+            cutOffTime,
+            sharpStreamerOptions.Value.ProcessingBatchSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        List<Guid> eventIds = @events.Select(r => r.Id).ToList();
-        await dbContext.Set<ReceivedEvent>()
-            .Where(r => eventIds.Contains(r.Id))
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(r => r.Status, EventStatus.InProgress)
-                    .SetProperty(r => r.RetryCount, r => r.RetryCount + 1),
-                cancellationToken);
-
+        const string updateQuery = @"
+                                    UPDATE sharp_streamer.received_events AS r
+                                      SET ""RetryCount"" = r.""RetryCount"" + 1,
+                                          ""Status"" = 1
+                                    WHERE r.""Id"" = ANY ({0});";
+        if (events.Any())
+        {
+            List<Guid> eventIds = @events.Select(r => r.Id).ToList();
+            await dbContext.Database.ExecuteSqlRawAsync(
+                updateQuery,
+                eventIds);
+        }
         return @events;
     }
 
@@ -57,23 +77,26 @@ public class EventsRepository<TDbContext>(
                         ""ErrorMessage"" = CASE ""Id""
                                            {errorMessageUpdates}
                                            END,
-                        ""UpdateTimestamp"" = @UpdateTimestamp
-                    WHERE ""Id"" = ANY (@ids);";
-
-        logger.LogDebug($"custom query executed: {updateSql}");
-        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
-        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
-        await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids, UpdateTimestamp = timeService.GetUtcNow() }, transaction: dbTransaction);
+                        ""UpdateTimestamp"" = {{0}}
+                    WHERE ""Id"" = ANY ({{1}});";
+        await dbContext.Database.ExecuteSqlRawAsync(updateSql, timeService.GetUtcNow(), ids);
     }
 
     public async Task<List<Guid>> GetPredecessorIds(string eventKey, DateTimeOffset time, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Set<ReceivedEvent>()
-            .Where(r => r.EventKey == eventKey)
-            .Where(r => r.Status == EventStatus.Failed || r.Status == EventStatus.None || r.Status == EventStatus.InProgress)
-            .Where(r => r.Timestamp < time)
-            .AsNoTracking()
-            .Select(r => r.Id)
+        const string query = @"
+                            SELECT 
+                                r.""Id""
+                            FROM 
+                                sharp_streamer.received_events AS r
+                            WHERE r.""EventKey"" = {0} AND 
+                                  r.""Status"" IN (3, 0, 1) AND
+                                  r.""Timestamp"" < {1};";
+        return await dbContext.Database
+            .SqlQueryRaw<Guid>(
+                sql: query,
+                eventKey,
+                time)
             .ToListAsync(cancellationToken);
     }
 

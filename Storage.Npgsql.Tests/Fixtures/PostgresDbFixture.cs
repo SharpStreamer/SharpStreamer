@@ -12,10 +12,11 @@ public class PostgresDbFixture : IAsyncLifetime
         .WithImage("postgres:latest")
         .WithPassword("postgres")
         .WithUsername("postgres")
+        //.WithPortBinding(56490, 5432) // TODO: Delete this
         .WithDatabase("sharp_streamer_db")
         .Build();
 
-    public DbContext DbContext { get; set; } = null;
+    public Func<DbContext> DbContextFactory { get; set; } = null;
 
     public async Task InitializeAsync()
     {
@@ -24,13 +25,14 @@ public class PostgresDbFixture : IAsyncLifetime
             .UseNpgsql(_postgresContainer.GetConnectionString())
             .Options;
 
-        DbContext = new PostgresTestingDbContext(options);
-        await DbContext.Database.EnsureCreatedAsync();
+        DbContextFactory = () => new PostgresTestingDbContext(options);
+
+        await using DbContext context = DbContextFactory();
+        await context.Database.EnsureCreatedAsync();
     }
 
     public async Task DisposeAsync()
     {
-        await DbContext.DisposeAsync();
         await _postgresContainer.DisposeAsync();
     }
 }
