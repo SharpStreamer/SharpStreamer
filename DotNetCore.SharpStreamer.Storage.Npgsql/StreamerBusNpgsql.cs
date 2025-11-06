@@ -1,6 +1,4 @@
-﻿using System.Data;
-using System.Text.Json;
-using Dapper;
+﻿using System.Text.Json;
 using DotNetCore.SharpStreamer.Bus;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
@@ -8,7 +6,6 @@ using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Services.Models;
 using DotNetCore.SharpStreamer.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
@@ -60,7 +57,7 @@ internal class StreamerBusNpgsql<TDbContext>(
 
     private async Task Insert(PublishedEvent publishedEvent)
     {
-        const string insertQuery = $@"
+        const string insertQuery = @"
                             INSERT INTO sharp_streamer.published_events
                             (
                                 ""Id"",
@@ -74,18 +71,25 @@ internal class StreamerBusNpgsql<TDbContext>(
                             )
                             VALUES
                             (
-                                @{nameof(PublishedEvent.Id)},
-                                @{nameof(PublishedEvent.Topic)},
-                                @{nameof(PublishedEvent.Content)}::json,
-                                @{nameof(PublishedEvent.RetryCount)},
-                                @{nameof(PublishedEvent.SentAt)},
-                                @{nameof(PublishedEvent.Timestamp)},
-                                @{nameof(PublishedEvent.Status)},
-                                @{nameof(PublishedEvent.EventKey)}
+                                {0},
+                                {1},
+                                {2}::json,
+                                {3},
+                                {4},
+                                {5},
+                                {6},
+                                {7}
                             );";
-        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
-        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
-        await dbConnection.ExecuteAsync(sql: insertQuery, param: publishedEvent, transaction: dbTransaction);
+        await dbContext.Database.ExecuteSqlRawAsync(
+            insertQuery,
+            publishedEvent.Id,
+            publishedEvent.Topic,
+            publishedEvent.Content,
+            publishedEvent.RetryCount,
+            publishedEvent.SentAt,
+            publishedEvent.Timestamp,
+            publishedEvent.Status,
+            publishedEvent.EventKey);
     }
 
     private static string GetContentAsString<T>(
