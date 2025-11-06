@@ -1,24 +1,21 @@
-﻿using System.Data;
-using AutoFixture;
-using Dapper;
+﻿using AutoFixture;
 using DotNetCore.SharpStreamer.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Storage.Npgsql.Tests.Fixtures;
 
 namespace Storage.Npgsql.Tests;
 
+[Collection(nameof(GlobalCollection))]
 public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
 {
     private readonly DbContext _dbContext;
     private readonly Fixture _fixture;
-    public EventsRepositoryTests(PostgresDbFixture postgresDbFixture)
+    public EventsRepositoryTests(
+        PostgresDbFixture postgresDbFixture,
+        DataFixtureConfig dataFixtureConfig)
     {
         _dbContext = postgresDbFixture.DbContext;
-        _fixture = new Fixture();
-        _fixture.Customize<DateTimeOffset>(composer => 
-            composer.FromFactory<DateTime>(
-                datetime => new DateTimeOffset(datetime.Year, datetime.Month, datetime.Day, datetime.Hour, datetime.Minute, datetime.Second, TimeSpan.Zero)));
+        _fixture = dataFixtureConfig.Fixture;
     }
 
     [Fact]

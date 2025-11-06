@@ -25,12 +25,7 @@ public class PostgresDbFixture : IAsyncLifetime
             .Options;
 
         DbContext = new PostgresTestingDbContext(options);
-        await EnsureDatabaseCreatedAsync();
-    }
-
-    private async Task EnsureDatabaseCreatedAsync()
-    {
-        await DbContext.Database.MigrateAsync();
+        await DbContext.Database.EnsureCreatedAsync();
     }
 
     public async Task DisposeAsync()
