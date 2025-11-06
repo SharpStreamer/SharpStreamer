@@ -136,6 +136,7 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
         List<ReceivedEvent> returnedEvents = await _eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
 
         // Act
+        _dbContext.ChangeTracker.Clear(); // To retrieve fresh data.
         List<ReceivedEvent> dbEvents = await _dbContext.Set<ReceivedEvent>().ToListAsync();
         foreach (ReceivedEvent dbEvent in dbEvents)
         {
