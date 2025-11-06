@@ -9,7 +9,6 @@ public class RabbitNpgDbContext(DbContextOptions<RabbitNpgDbContext> options) : 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        modelBuilder.ConfigureSharpStreamerNpgsql();
         base.OnModelCreating(modelBuilder);
     }
 }
