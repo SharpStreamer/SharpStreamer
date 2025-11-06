@@ -15,7 +15,7 @@ using Storage.Npgsql.Tests.Helpers;
 namespace Storage.Npgsql.Tests;
 
 [Collection(nameof(GlobalCollection))]
-public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
+public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLifetime
 {
     private readonly DbContext _dbContext;
     private readonly Fixture _fixture;
@@ -67,9 +67,6 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
 
         // Act
         returnedEvents.Should().BeEquivalentTo(expectedEventsToBeReturned);
-
-        // Clear database
-        await _dbContext.Set<ReceivedEvent>().ExecuteDeleteAsync();
     }
 
     [Fact]
@@ -102,9 +99,6 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
 
         // Act
         returnedEvents.Should().BeEquivalentTo(expectedEventsToBeReturned);
-
-        // Clear database
-        await _dbContext.Set<ReceivedEvent>().ExecuteDeleteAsync();
     }
 
     [Fact]
@@ -149,9 +143,6 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
                 dbEvent.Status.Should().Be(receivedEvents.Single(e => e.Id == dbEvent.Id).Status);
             }
         }
-
-        // Clear database
-        await _dbContext.Set<ReceivedEvent>().ExecuteDeleteAsync();
     }
 
     /// <summary>
@@ -186,5 +177,17 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>
 
         receivedEvents[1].RetryCount = 50;
         return receivedEvents;
+    }
+
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _dbContext.Set<ReceivedEvent>().ExecuteDeleteAsync();
+        await _dbContext.Set<PublishedEvent>().ExecuteDeleteAsync();
+        _dbContext.ChangeTracker.Clear();
     }
 }
