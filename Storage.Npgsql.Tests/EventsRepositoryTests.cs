@@ -353,6 +353,7 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
 
         // Check if the initial existing event's content hasn't been updated by the 'new' event with the same ID
         dbEvents.Single(e => e.Id == existingEvent.Id).Content.Should().NotBe(@"{""opana"" : 1}");
+        dbEvents.Single(e => e.Id == newEvents[0].Id).Should().BeEquivalentTo(newEvents[0]);
     }
 
     [Fact]

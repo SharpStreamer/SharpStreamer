@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text;
 using Dapper;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
@@ -6,6 +7,7 @@ using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -38,7 +40,7 @@ public class EventsRepository<TDbContext>(
                                             r.""UpdateTimestamp""
                                         FROM sharp_streamer.received_events AS r
                                         WHERE r.""Status"" IN (3, 0) AND (r.""UpdateTimestamp"" IS NULL OR r.""UpdateTimestamp"" < {0}) AND r.""RetryCount"" < 50
-                                        ORDER BY r.""Timestamp""
+                                        ORDER BY r.""Timestamp"" ASC
                                         LIMIT {1};";
 
         List<ReceivedEvent> @events = await dbContext.Database.SqlQueryRaw<ReceivedEvent>(
@@ -103,21 +105,40 @@ public class EventsRepository<TDbContext>(
     public async Task<List<PublishedEvent>> GetEventsToPublish(CancellationToken cancellationToken = default)
     {
         DateTimeOffset currentTime = timeService.GetUtcNow();
-        List<PublishedEvent> @events = await dbContext.Set<PublishedEvent>()
-            .Where(r => r.Status == EventStatus.None)
-            .Where(r => r.SentAt < currentTime)
-            .OrderBy(r => r.SentAt)
-            .Take(sharpStreamerOptions.Value.ProcessingBatchSize)
+        const string retrieveQuery = @"
+                                        SELECT
+                                            p.""Id"",
+                                            p.""Content"",
+                                            p.""EventKey"",
+                                            p.""RetryCount"",
+                                            p.""SentAt"",
+                                            p.""Status"",
+                                            p.""Timestamp"",
+                                            p.""Topic""
+                                        FROM sharp_streamer.published_events AS p
+                                        WHERE
+                                            p.""Status"" = 0 AND
+                                            p.""SentAt"" < {0}
+                                        ORDER BY p.""SentAt"" ASC
+                                        LIMIT {1};";
+        List<PublishedEvent> @events = await dbContext.Database
+            .SqlQueryRaw<PublishedEvent>(
+                sql: retrieveQuery,
+                currentTime,
+                sharpStreamerOptions.Value.ProcessingBatchSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
         List<Guid> eventIds = @events.Select(r => r.Id).ToList();
-        await dbContext.Set<PublishedEvent>()
-            .Where(r => eventIds.Contains(r.Id))
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(r => r.RetryCount, r => r.RetryCount + 1),
-                cancellationToken);
+        const string updateQuery = @"
+                                    UPDATE sharp_streamer.published_events AS p
+                                          SET 
+                                              ""RetryCount"" = p.""RetryCount"" + 1
+                                          WHERE 
+                                              p.""Id"" = ANY ({0});";
+        await dbContext.Database.ExecuteSqlRawAsync(
+            updateQuery,
+            eventIds);
         return @events;
     }
 
@@ -125,21 +146,19 @@ public class EventsRepository<TDbContext>(
     {
         List<Guid> ids = events.Select(e => e.Id).ToList();
 
-        const string updateSql = $@"
+        const string updateSql = @"
                     UPDATE sharp_streamer.published_events
                     SET ""Status"" = 2
-                    WHERE ""Id"" = ANY (@ids);";
-
-        logger.LogInformation($"custom query executed: {updateSql}");
-        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
-        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
-        await dbConnection.ExecuteAsync(sql: updateSql, param: new { ids = ids }, transaction: dbTransaction);
+                    WHERE ""Id"" = ANY ({0});";
+        await dbContext.Database.ExecuteSqlRawAsync(
+            updateSql,
+            ids);
     }
 
     public async Task SaveConsumedEvents(List<ReceivedEvent> receivedEvents, CancellationToken cancellationToken = default)
     {
-        const string sql = $@"
-                            INSERT INTO sharp_streamer.received_events
+        StringBuilder queryStringBuilder = new StringBuilder(@"
+                        INSERT INTO sharp_streamer.received_events
                             (
                                 ""Id"",
                                 ""Group"",
@@ -154,26 +173,49 @@ public class EventsRepository<TDbContext>(
                                 ""EventKey"",
                                 ""Partition""
                             )
-                            VALUES 
+                            VALUES");
+        List<object> parameters = [];
+        for (int i = 0; i < receivedEvents.Count; i++)
+        {
+            ReceivedEvent receivedEvent = receivedEvents[i];
+            queryStringBuilder.Append($@"
                             (
-                                @{nameof(ReceivedEvent.Id)},
-                                @{nameof(ReceivedEvent.Group)},
-                                @{nameof(ReceivedEvent.Topic)},
-                                @{nameof(ReceivedEvent.Content)}::json,
-                                @{nameof(ReceivedEvent.RetryCount)},
-                                @{nameof(ReceivedEvent.SentAt)},
-                                @{nameof(ReceivedEvent.Timestamp)},
-                                @{nameof(ReceivedEvent.Status)},
-                                @{nameof(ReceivedEvent.ErrorMessage)},
-                                @{nameof(ReceivedEvent.UpdateTimestamp)},
-                                @{nameof(ReceivedEvent.EventKey)},
-                                @{nameof(ReceivedEvent.Partition)}
-                            )
-                            ON CONFLICT (""Id"") DO NOTHING;";
-        logger.LogInformation($"custom query executed: {sql}");
-        IDbConnection dbConnection = dbContext.Database.GetDbConnection();
-        IDbTransaction? dbTransaction = dbContext.Database.CurrentTransaction?.GetDbTransaction();
-        await dbConnection.ExecuteAsync(sql: sql, param: receivedEvents, transaction: dbTransaction);
+                                {{{i * 12}}},
+                                {{{i * 12 + 1}}},
+                                {{{i * 12 + 2}}},
+                                {{{i * 12 + 3}}}::json,
+                                {{{i * 12 + 4}}},
+                                {{{i * 12 + 5}}},
+                                {{{i * 12 + 6}}},
+                                {{{i * 12 + 7}}},
+                                {{{i * 12 + 8}}},
+                                {{{i * 12 + 9}}},
+                                {{{i * 12 + 10}}},
+                                {{{i * 12 + 11}}}
+                            )");
+            if (i != receivedEvents.Count - 1)
+            {
+                queryStringBuilder.Append(',');
+            }
+            parameters.Add(receivedEvent.Id);
+            parameters.Add(receivedEvent.Group);
+            parameters.Add(receivedEvent.Topic);
+            parameters.Add(receivedEvent.Content);
+            parameters.Add(receivedEvent.RetryCount);
+            parameters.Add(receivedEvent.SentAt);
+            parameters.Add(receivedEvent.Timestamp);
+            parameters.Add(receivedEvent.Status);
+            parameters.Add(receivedEvent.ErrorMessage);
+            parameters.Add(receivedEvent.UpdateTimestamp!);
+            parameters.Add(receivedEvent.EventKey);
+            parameters.Add(receivedEvent.Partition);
+        }
+        queryStringBuilder.Append(@" ON CONFLICT (""Id"") DO NOTHING;");
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            queryStringBuilder.ToString(),
+            parameters,
+            cancellationToken);
     }
 
     public async Task<List<PublishedEvent>> GetProducedEventsByStatusAndElapsedTimespan(
@@ -182,9 +224,26 @@ public class EventsRepository<TDbContext>(
         CancellationToken cancellationToken = default)
     {
         DateTimeOffset cutOffTime = timeService.GetUtcNow().Subtract(timeSpan);
-        return await dbContext.Set<PublishedEvent>()
-            .Where(e => e.Status == eventStatus)
-            .Where(e => e.SentAt <= cutOffTime)
+        const string query = @"
+                            SELECT 
+                                p.""Id"",
+                                p.""Content"",
+                                p.""EventKey"",
+                                p.""RetryCount"",
+                                p.""SentAt"",
+                                p.""Status"",
+                                p.""Timestamp"",
+                                p.""Topic""
+                            FROM sharp_streamer.published_events AS p
+                            WHERE 
+                                p.""Status"" = {0} AND 
+                                p.""SentAt"" <= {1};";
+
+        return await dbContext.Database
+            .SqlQueryRaw<PublishedEvent>(
+                sql: query,
+                eventStatus,
+                cutOffTime)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -195,27 +254,53 @@ public class EventsRepository<TDbContext>(
         CancellationToken cancellationToken = default)
     {
         DateTimeOffset cutOffTime = timeService.GetUtcNow().Subtract(timeSpan);
-        return await dbContext.Set<ReceivedEvent>()
-            .Where(e => e.Status == eventStatus)
-            .Where(e => e.UpdateTimestamp <= cutOffTime)
+        const string query = @"
+                                SELECT 
+                                    r.""Id"",
+                                    r.""Content"",
+                                    r.""ErrorMessage"",
+                                    r.""EventKey"",
+                                    r.""Group"",
+                                    r.""Partition"",
+                                    r.""RetryCount"",
+                                    r.""SentAt"",
+                                    r.""Status"",
+                                    r.""Timestamp"",
+                                    r.""Topic"",
+                                    r.""UpdateTimestamp""
+                                FROM sharp_streamer.received_events AS r
+                                  WHERE 
+                                      r.""Status"" = {0} AND
+                                      r.""UpdateTimestamp"" <= {1};";
+        return await dbContext.Database
+            .SqlQueryRaw<ReceivedEvent>(
+                sql: query,
+                eventStatus,
+                cutOffTime)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
     public async Task DeleteProducedEventsById(List<Guid> eventIds, CancellationToken cancellationToken = default)
     {
-        await dbContext.Set<PublishedEvent>()
-            .Where(e => eventIds.Contains(e.Id))
-            .ExecuteDeleteAsync(cancellationToken);
+        const string deleteQuery = @"
+                                    DELETE 
+                                        FROM sharp_streamer.published_events AS p
+                                      WHERE 
+                                          p.""Id"" = ANY ({0});";
+        await dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
     }
 
     public async Task DeleteReceivedEventsById(
         List<Guid> eventIds,
         CancellationToken cancellationToken = default)
     {
-        await dbContext.Set<ReceivedEvent>()
-            .Where(e => eventIds.Contains(e.Id))
-            .ExecuteDeleteAsync(cancellationToken);
+        const string deleteQuery = @"
+                                    DELETE 
+                                        FROM sharp_streamer.received_events AS p
+                                      WHERE 
+                                          p.""Id"" = ANY ({0});";
+        await dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
     }
 
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)
