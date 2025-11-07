@@ -40,13 +40,13 @@ public class ProducedEventsCleaner(
 
     private async Task RunProducedEventsCleaner()
     {
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+        IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
+
         await using (IDistributedSynchronizationHandle _ = await distributedLockProvider.AcquireLockAsync(
                          $"{sharpStreamerOptions.Value.ConsumerGroup}-{nameof(ProducedEventsCleaner)}",
                          TimeSpan.FromMinutes(2),
                          CancellationToken.None));
-
-        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-        IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
 
         List<PublishedEvent> publishedEvents = await eventsRepository.GetProducedEventsByStatusAndElapsedTimespan(
             EventStatus.Succeeded,

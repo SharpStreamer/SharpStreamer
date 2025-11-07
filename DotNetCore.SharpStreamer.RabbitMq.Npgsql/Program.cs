@@ -36,6 +36,4 @@ app.UseSwaggerUI(options =>
 
 app.MapControllers();
 
-await app.MigrateDb();
-
 app.Run();
