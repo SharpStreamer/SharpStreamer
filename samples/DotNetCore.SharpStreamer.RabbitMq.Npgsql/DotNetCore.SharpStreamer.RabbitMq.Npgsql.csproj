@@ -13,12 +13,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="DotNetCore.SharpStreamer.Storage.Npgsql" />
+        <PackageReference Include="DotNetCore.SharpStreamer.Transport.RabbitMq" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\DotNetCore.SharpStreamer.Storage.Npgsql\DotNetCore.SharpStreamer.Storage.Npgsql.csproj" />
-      <ProjectReference Include="..\..\src\DotNetCore.SharpStreamer.Transport.RabbitMq\DotNetCore.SharpStreamer.Transport.RabbitMq.csproj" />
     </ItemGroup>
 </Project>
