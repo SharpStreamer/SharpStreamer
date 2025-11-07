@@ -8,6 +8,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" PrivateAssets="All"/>
     </ItemGroup>
 
     <PropertyGroup>

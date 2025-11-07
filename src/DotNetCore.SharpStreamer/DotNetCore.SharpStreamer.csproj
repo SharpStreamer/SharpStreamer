@@ -7,17 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="DistributedLock.Core" Version="1.0.8" />
-      <PackageReference Include="MediatR" Version="12.5.0"/>
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" IncludeAssets="Compile"/>
-      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.9" IncludeAssets="Compile"/>
-      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9" IncludeAssets="Compile"/>
-      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.9" IncludeAssets="Compile"/>
+      <PackageReference Include="DistributedLock.Core" PrivateAssets="All"/>
+      <PackageReference Include="MediatR" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" PrivateAssets="All"/>
     </ItemGroup>
 
     <PropertyGroup>
         <PackageId>DotNetCore.SharpStreamer</PackageId>
-        <Version>2.0.0</Version>
+        <Version>2.0.1</Version>
         <Authors>SandrikaMgeli</Authors>
         <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
     </PropertyGroup>
