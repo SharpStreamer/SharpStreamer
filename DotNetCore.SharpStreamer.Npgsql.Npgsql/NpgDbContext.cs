@@ -9,7 +9,6 @@ public class NpgDbContext(DbContextOptions<NpgDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        modelBuilder.ConfigureSharpStreamerNpgsql();
         base.OnModelCreating(modelBuilder);
     }
 }

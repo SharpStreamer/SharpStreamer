@@ -9,7 +9,6 @@ public class KafkaNpgDbContext(DbContextOptions<KafkaNpgDbContext> options) : Db
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        modelBuilder.ConfigureSharpStreamerNpgsql();
         base.OnModelCreating(modelBuilder);
     }
 }

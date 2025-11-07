@@ -9,21 +9,34 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
-internal class StreamerBusNpgsql<TDbContext>(
-    TDbContext dbContext,
-    ITimeService timeService,
-    IIdGenerator idGenerator,
-    ICacheService cacheService) : IStreamerBus
+internal class StreamerBusNpgsql<TDbContext> : IStreamerBus
     where TDbContext : DbContext
 {
+    private readonly TDbContext _dbContext;
+    private readonly ITimeService _timeService;
+    private readonly IIdGenerator _idGenerator;
+    private readonly ICacheService _cacheService;
+    public StreamerBusNpgsql(
+        TDbContext dbContext,
+        ITimeService timeService,
+        IIdGenerator idGenerator,
+        ICacheService cacheService,
+        IMigrationService migrationService)
+    {
+        migrationService.Migrate();
+        this._dbContext = dbContext;
+        this._timeService = timeService;
+        this._idGenerator = idGenerator;
+        this._cacheService = cacheService;
+    }
     public async Task PublishAsync<T>(T message, string eventKey, params KeyValuePair<string, string>[] headers) where T : class
     {
-        PublishableEventMetadata metadata = cacheService.GetOrCreatePublishableEventMetadata<T>();
+        PublishableEventMetadata metadata = _cacheService.GetOrCreatePublishableEventMetadata<T>();
         string content = GetContentAsString(message, headers, metadata);
-        DateTimeOffset currentUtcTime = timeService.GetUtcNow();
+        DateTimeOffset currentUtcTime = _timeService.GetUtcNow();
         PublishedEvent publishedEvent = new()
         {
-            Id = idGenerator.GenerateId(),
+            Id = _idGenerator.GenerateId(),
             Content = content,
             Timestamp = currentUtcTime,
             SentAt = currentUtcTime,
@@ -38,19 +51,19 @@ internal class StreamerBusNpgsql<TDbContext>(
     public async Task PublishDelayedAsync<T>(T message, TimeSpan delay, params KeyValuePair<string, string>[] headers)
         where T : class
     {
-        PublishableEventMetadata metadata = cacheService.GetOrCreatePublishableEventMetadata<T>();
+        PublishableEventMetadata metadata = _cacheService.GetOrCreatePublishableEventMetadata<T>();
         string content = GetContentAsString(message, headers, metadata);
-        DateTimeOffset currentUtcTime = timeService.GetUtcNow();
+        DateTimeOffset currentUtcTime = _timeService.GetUtcNow();
         PublishedEvent publishedEvent = new()
         {
-            Id = idGenerator.GenerateId(),
+            Id = _idGenerator.GenerateId(),
             Content = content,
             Timestamp = currentUtcTime,
             SentAt = currentUtcTime.Add(delay),
             RetryCount = 0,
             Status = EventStatus.None,
             Topic = metadata.TopicName,
-            EventKey = idGenerator.GenerateId().ToString(),
+            EventKey = _idGenerator.GenerateId().ToString(),
         };
         await Insert(publishedEvent);
     }
@@ -80,7 +93,7 @@ internal class StreamerBusNpgsql<TDbContext>(
                                 {6},
                                 {7}
                             );";
-        await dbContext.Database.ExecuteSqlRawAsync(
+        await _dbContext.Database.ExecuteSqlRawAsync(
             insertQuery,
             publishedEvent.Id,
             publishedEvent.Topic,

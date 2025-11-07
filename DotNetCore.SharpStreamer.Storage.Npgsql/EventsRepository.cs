@@ -10,16 +10,29 @@ using Microsoft.Extensions.Options;
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
-public class EventsRepository<TDbContext>(
-    TDbContext dbContext,
-    ILogger<EventsRepository<TDbContext>> logger,
-    IOptions<SharpStreamerOptions> sharpStreamerOptions,
-    ITimeService timeService) : IEventsRepository
+public class EventsRepository<TDbContext> : IEventsRepository
     where TDbContext : DbContext
 {
+    private readonly TDbContext _dbContext;
+    private readonly ILogger<EventsRepository<TDbContext>> _logger;
+    private readonly IOptions<SharpStreamerOptions> _sharpStreamerOptions;
+    private readonly ITimeService _timeService;
+    public EventsRepository(
+        TDbContext dbContext,
+        ILogger<EventsRepository<TDbContext>> logger,
+        IOptions<SharpStreamerOptions> sharpStreamerOptions,
+        ITimeService timeService,
+        IMigrationService migration)
+    {
+        migration.Migrate();
+        this._dbContext = dbContext;
+        this._logger = logger;
+        this._sharpStreamerOptions = sharpStreamerOptions;
+        this._timeService = timeService;
+    }
     public async Task<List<ReceivedEvent>> GetAndMarkEventsForProcessing(CancellationToken cancellationToken = default)
     {
-        DateTimeOffset cutOffTime = timeService.GetUtcNow().AddSeconds(-20);
+        DateTimeOffset cutOffTime = _timeService.GetUtcNow().AddSeconds(-20);
         const string retrieveQuery = @"
                                         SELECT
                                             r.""Id"",
@@ -39,10 +52,10 @@ public class EventsRepository<TDbContext>(
                                         ORDER BY r.""Timestamp"" ASC
                                         LIMIT {1};";
 
-        List<ReceivedEvent> @events = await dbContext.Database.SqlQueryRaw<ReceivedEvent>(
+        List<ReceivedEvent> @events = await _dbContext.Database.SqlQueryRaw<ReceivedEvent>(
             sql: retrieveQuery,
             cutOffTime,
-            sharpStreamerOptions.Value.ProcessingBatchSize)
+            _sharpStreamerOptions.Value.ProcessingBatchSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -54,7 +67,7 @@ public class EventsRepository<TDbContext>(
         if (events.Any())
         {
             List<Guid> eventIds = @events.Select(r => r.Id).ToList();
-            await dbContext.Database.ExecuteSqlRawAsync(
+            await _dbContext.Database.ExecuteSqlRawAsync(
                 updateQuery,
                 eventIds);
         }
@@ -77,7 +90,7 @@ public class EventsRepository<TDbContext>(
                                            END,
                         ""UpdateTimestamp"" = {{0}}
                     WHERE ""Id"" = ANY ({{1}});";
-        await dbContext.Database.ExecuteSqlRawAsync(updateSql, timeService.GetUtcNow(), ids);
+        await _dbContext.Database.ExecuteSqlRawAsync(updateSql, _timeService.GetUtcNow(), ids);
     }
 
     public async Task<List<Guid>> GetPredecessorIds(string eventKey, DateTimeOffset time, CancellationToken cancellationToken = default)
@@ -90,7 +103,7 @@ public class EventsRepository<TDbContext>(
                             WHERE r.""EventKey"" = {0} AND 
                                   r.""Status"" IN (3, 0, 1) AND
                                   r.""Timestamp"" < {1};";
-        return await dbContext.Database
+        return await _dbContext.Database
             .SqlQueryRaw<Guid>(
                 sql: query,
                 eventKey,
@@ -100,7 +113,7 @@ public class EventsRepository<TDbContext>(
 
     public async Task<List<PublishedEvent>> GetEventsToPublish(CancellationToken cancellationToken = default)
     {
-        DateTimeOffset currentTime = timeService.GetUtcNow();
+        DateTimeOffset currentTime = _timeService.GetUtcNow();
         const string retrieveQuery = @"
                                         SELECT
                                             p.""Id"",
@@ -117,11 +130,11 @@ public class EventsRepository<TDbContext>(
                                             p.""SentAt"" < {0}
                                         ORDER BY p.""SentAt"" ASC
                                         LIMIT {1};";
-        List<PublishedEvent> @events = await dbContext.Database
+        List<PublishedEvent> @events = await _dbContext.Database
             .SqlQueryRaw<PublishedEvent>(
                 sql: retrieveQuery,
                 currentTime,
-                sharpStreamerOptions.Value.ProcessingBatchSize)
+                _sharpStreamerOptions.Value.ProcessingBatchSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -132,7 +145,7 @@ public class EventsRepository<TDbContext>(
                                               ""RetryCount"" = p.""RetryCount"" + 1
                                           WHERE 
                                               p.""Id"" = ANY ({0});";
-        await dbContext.Database.ExecuteSqlRawAsync(
+        await _dbContext.Database.ExecuteSqlRawAsync(
             updateQuery,
             eventIds);
         return @events;
@@ -146,7 +159,7 @@ public class EventsRepository<TDbContext>(
                     UPDATE sharp_streamer.published_events
                     SET ""Status"" = 2
                     WHERE ""Id"" = ANY ({0});";
-        await dbContext.Database.ExecuteSqlRawAsync(
+        await _dbContext.Database.ExecuteSqlRawAsync(
             updateSql,
             ids);
     }
@@ -208,7 +221,7 @@ public class EventsRepository<TDbContext>(
         }
         queryStringBuilder.Append(@" ON CONFLICT (""Id"") DO NOTHING;");
 
-        await dbContext.Database.ExecuteSqlRawAsync(
+        await _dbContext.Database.ExecuteSqlRawAsync(
             queryStringBuilder.ToString(),
             parameters,
             cancellationToken);
@@ -219,7 +232,7 @@ public class EventsRepository<TDbContext>(
         TimeSpan timeSpan,
         CancellationToken cancellationToken = default)
     {
-        DateTimeOffset cutOffTime = timeService.GetUtcNow().Subtract(timeSpan);
+        DateTimeOffset cutOffTime = _timeService.GetUtcNow().Subtract(timeSpan);
         const string query = @"
                             SELECT 
                                 p.""Id"",
@@ -235,7 +248,7 @@ public class EventsRepository<TDbContext>(
                                 p.""Status"" = {0} AND 
                                 p.""SentAt"" <= {1};";
 
-        return await dbContext.Database
+        return await _dbContext.Database
             .SqlQueryRaw<PublishedEvent>(
                 sql: query,
                 eventStatus,
@@ -249,7 +262,7 @@ public class EventsRepository<TDbContext>(
         TimeSpan timeSpan,
         CancellationToken cancellationToken = default)
     {
-        DateTimeOffset cutOffTime = timeService.GetUtcNow().Subtract(timeSpan);
+        DateTimeOffset cutOffTime = _timeService.GetUtcNow().Subtract(timeSpan);
         const string query = @"
                                 SELECT 
                                     r.""Id"",
@@ -268,7 +281,7 @@ public class EventsRepository<TDbContext>(
                                   WHERE 
                                       r.""Status"" = {0} AND
                                       r.""UpdateTimestamp"" <= {1};";
-        return await dbContext.Database
+        return await _dbContext.Database
             .SqlQueryRaw<ReceivedEvent>(
                 sql: query,
                 eventStatus,
@@ -284,7 +297,7 @@ public class EventsRepository<TDbContext>(
                                         FROM sharp_streamer.published_events AS p
                                       WHERE 
                                           p.""Id"" = ANY ({0});";
-        await dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
+        await _dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
     }
 
     public async Task DeleteReceivedEventsById(
@@ -296,7 +309,7 @@ public class EventsRepository<TDbContext>(
                                         FROM sharp_streamer.received_events AS p
                                       WHERE 
                                           p.""Id"" = ANY ({0});";
-        await dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
+        await _dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
     }
 
     private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)

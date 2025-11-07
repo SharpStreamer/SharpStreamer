@@ -24,6 +24,7 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
     private readonly IOptions<SharpStreamerOptions> _sharpStreamerOptions;
     private readonly ITimeService _timeService;
     private readonly Func<DbContext> _dbContextFactory;
+    private readonly IMigrationService _migrationService;
     public EventsRepositoryTests(
         PostgresDbFixture postgresDbFixture,
         DataFixtureConfig dataFixtureConfig)
@@ -31,6 +32,7 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         _dbContext = postgresDbFixture.DbContextFactory();
         _dbContextFactory = postgresDbFixture.DbContextFactory;
         _fixture = dataFixtureConfig.Fixture;
+        _migrationService = Substitute.For<IMigrationService>();
         _logger = Substitute.For<ILogger<EventsRepository<PostgresTestingDbContext>>>();
         _sharpStreamerOptions = Substitute.For<IOptions<SharpStreamerOptions>>();
         _timeService = Substitute.For<ITimeService>();
@@ -38,7 +40,15 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
             (PostgresTestingDbContext)_dbContext,
             _logger,
             _sharpStreamerOptions,
-            _timeService);
+            _timeService,
+            _migrationService);
+    }
+
+    [Fact]
+    public void EventsRepositoryConstructor_CallsMigration()
+    {
+        // Assert
+        _migrationService.Received(1).Migrate();
     }
 
     [Fact]

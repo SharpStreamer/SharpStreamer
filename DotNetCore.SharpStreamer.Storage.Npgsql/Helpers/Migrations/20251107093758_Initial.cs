@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace DotNetCore.SharpStreamer.Kafka.Npgsql.Migrations
+namespace DotNetCore.SharpStreamer.Storage.Npgsql.Helpers.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration

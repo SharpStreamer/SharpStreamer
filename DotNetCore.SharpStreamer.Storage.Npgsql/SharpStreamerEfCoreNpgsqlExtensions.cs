@@ -1,4 +1,5 @@
-﻿using DotNetCore.SharpStreamer.Bus;
+﻿using System.Runtime.CompilerServices;
+using DotNetCore.SharpStreamer.Bus;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
@@ -8,6 +9,8 @@ using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
+[assembly: InternalsVisibleTo("Storage.Npgsql.Tests")]
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
@@ -31,10 +34,11 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         services.AddHostedService<EventsPublisher>();
         services.AddHostedService<ProcessedEventsCleaner>();
         services.AddHostedService<ProducedEventsCleaner>();
+        services.AddSingleton<IMigrationService, MigrationService<TDbContext>>();
         return services;
     }
 
-    public static ModelBuilder ConfigureSharpStreamerNpgsql(this ModelBuilder modelBuilder)
+    internal static ModelBuilder ConfigureSharpStreamerNpgsql(this ModelBuilder modelBuilder)
     {
         ConfigurePublishedEvents(modelBuilder);
         ConfigureReceivedEvents(modelBuilder);

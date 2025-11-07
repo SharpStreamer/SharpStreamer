@@ -50,22 +50,22 @@ public class EventsPublisher(
 
     private async Task RunProcessor()
     {
+        
+        await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
+        IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
+        ITransportService transportService = scope.ServiceProvider.GetRequiredService<ITransportService>();
+
         await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
                          $"{options.Value.ConsumerGroup}-{nameof(EventsPublisher)}",
                          TimeSpan.FromMinutes(2),
-                         CancellationToken.None))
+                         CancellationToken.None)) ;
+        
+        List<PublishedEvent> publishedEvents = await eventsRepository.GetEventsToPublish(CancellationToken.None);
+
+        if (publishedEvents.Any())
         {
-            await using AsyncServiceScope scope = serviceScopeFactory.CreateAsyncScope();
-            IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
-            ITransportService transportService = scope.ServiceProvider.GetRequiredService<ITransportService>();
-
-            List<PublishedEvent> publishedEvents = await eventsRepository.GetEventsToPublish(CancellationToken.None);
-
-            if (publishedEvents.Any())
-            {
-                await transportService.Publish(publishedEvents, CancellationToken.None);
-                await eventsRepository.MarkPostPublishAttempt(publishedEvents, CancellationToken.None);
-            }
+            await transportService.Publish(publishedEvents, CancellationToken.None);
+            await eventsRepository.MarkPostPublishAttempt(publishedEvents, CancellationToken.None);
         }
     }
 }

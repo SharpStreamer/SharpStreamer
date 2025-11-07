@@ -12,7 +12,6 @@ public class PostgresDbFixture : IAsyncLifetime
         .WithImage("postgres:latest")
         .WithPassword("postgres")
         .WithUsername("postgres")
-        //.WithPortBinding(56490, 5432) // TODO: Delete this
         .WithDatabase("sharp_streamer_db")
         .Build();
 
