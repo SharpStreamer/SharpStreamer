@@ -8,11 +8,11 @@
 
     <ItemGroup>
       <PackageReference Include="DistributedLock.Core" Version="1.0.8" />
-      <PackageReference Include="MediatR" Version="12.5.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.9" />
+      <PackageReference Include="MediatR" Version="12.5.0" IncludeAssets="Compile"/>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" IncludeAssets="Compile"/>
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.9" IncludeAssets="Compile"/>
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9" IncludeAssets="Compile"/>
+      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.9" IncludeAssets="Compile"/>
     </ItemGroup>
 
     <PropertyGroup>
