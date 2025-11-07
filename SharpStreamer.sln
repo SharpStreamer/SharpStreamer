@@ -19,9 +19,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests\Storage.Npgsql.Tests", "tests\Storage.Npgsql.Tests\Storage.Npgsql.Tests.csproj", "{BE970202-3F6D-4E2C-A5D7-A8CE2A875B40}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C64CDAB1-DEBE-4F6B-B6C8-26B42F088D96}"
-	ProjectSection(SolutionItems) = preProject
-		src\Directory.Packages.props = src\Directory.Packages.props
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "items", "items", "{EAD44F01-461C-4B0E-AFDB-BA608407CBD2}"
 	ProjectSection(SolutionItems) = preProject
@@ -31,6 +28,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5F349B50-49FD-4AF2-8B94-E297D2F87358}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{DB5E789F-5AEF-43DC-A158-E00D42FB536B}"
+	ProjectSection(SolutionItems) = preProject
+		samples\Directory.Packages.props = samples\Directory.Packages.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
