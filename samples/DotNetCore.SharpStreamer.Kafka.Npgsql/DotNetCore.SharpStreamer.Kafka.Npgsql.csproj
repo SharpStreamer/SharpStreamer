@@ -16,13 +16,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DotNetCore.SharpStreamer.Storage.Npgsql\DotNetCore.SharpStreamer.Storage.Npgsql.csproj" />
-        <ProjectReference Include="..\DotNetCore.SharpStreamer.Transport.Npgsql\DotNetCore.SharpStreamer.Transport.Npgsql.csproj" />
+        <Content Update="appsettings.Development.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Update="appsettings.Development.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
+      <ProjectReference Include="..\..\src\DotNetCore.SharpStreamer.Storage.Npgsql\DotNetCore.SharpStreamer.Storage.Npgsql.csproj" />
+      <ProjectReference Include="..\..\src\DotNetCore.SharpStreamer.Transport.Kafka\DotNetCore.SharpStreamer.Transport.Kafka.csproj" />
     </ItemGroup>
 </Project>
