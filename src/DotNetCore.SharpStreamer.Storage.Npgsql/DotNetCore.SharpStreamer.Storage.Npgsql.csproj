@@ -26,6 +26,11 @@ This package is completely private to this project.
 It will NOT be visible to other projects at compile time or runtime.
 Only this project can use it. mostly used for design time tools like
 Ef core deisgn.
+If you use PrivateAssets all it means that it won't be accessible either compile time or runtime so,
+you application will fail. This is the reason why we use PrivateAsset compile to ensure that
+it is not accessible in compile time only, but after code is compiled, all third party dlls will be
+accessible and runnable without problem. It ensures that library consumer won't use third party libraries
+implicitly (Without explicitly installing it.).
         -->
     </ItemGroup>
 
