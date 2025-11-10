@@ -24,4 +24,6 @@ public interface IEventsRepository
     Task DeleteProducedEventsById(List<Guid> eventIds, CancellationToken cancellationToken = default);
 
     Task DeleteReceivedEventsById(List<Guid> eventIds, CancellationToken cancellationToken = default);
+
+    Task MarkPostProcessing(ReceivedEvent receivedEvent, CancellationToken cancellationToken = default);
 }
