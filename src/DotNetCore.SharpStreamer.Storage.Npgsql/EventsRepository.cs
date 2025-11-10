@@ -93,6 +93,18 @@ public class EventsRepository<TDbContext> : IEventsRepository
         await _dbContext.Database.ExecuteSqlRawAsync(updateSql, _timeService.GetUtcNow(), ids);
     }
 
+    public async Task MarkPostProcessing(ReceivedEvent receivedEvent, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string updateSql = @"
+                    UPDATE sharp_streamer.received_events
+                    SET ""Status"" = {0},
+                        ""ErrorMessage"" = {1},
+                        ""UpdateTimestamp"" = {2}
+                    WHERE ""Id"" = {3};";
+        await _dbContext.Database.ExecuteSqlRawAsync(updateSql, receivedEvent.Status, receivedEvent.ErrorMessage, _timeService.GetUtcNow(), receivedEvent.Id);
+    }
+
     public async Task<List<Guid>> GetPredecessorIds(string eventKey, DateTimeOffset time, CancellationToken cancellationToken = default)
     {
         const string query = @"

@@ -201,7 +201,33 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         dbEvents.Single(r => r.Id == receivedEvents[2].Id).UpdateTimestamp.Should().Be(currentTime);
     }
 
-    // ... Existing code up to MarkPostProcessing_MarksPassedEvents ...
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("Error message 1")]
+    public async Task MarkPostProcessing_WhenSingleEventCalled_MarksPassedEvents(string? errorMessage)
+    {
+        // Arrange
+        DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
+        _timeService.GetUtcNow().Returns(currentTime);
+        ReceivedEvent receivedEvent = _fixture.Create<ReceivedEvent>();
+        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvent);
+        await _dbContext.SaveChangesAsync();
+
+        receivedEvent.Status = EventStatus.Failed;
+        receivedEvent.ErrorMessage = errorMessage;
+
+        // Act
+        await _eventsRepository.MarkPostProcessing(receivedEvent);
+
+        // Assert
+        await using DbContext assertDbContext = _dbContextFactory();
+        List<ReceivedEvent> dbEvents = await assertDbContext.Set<ReceivedEvent>().ToListAsync();
+
+        dbEvents.Single(r => r.Id == receivedEvent.Id).Status.Should().Be(EventStatus.Failed);
+        dbEvents.Single(r => r.Id == receivedEvent.Id).ErrorMessage.Should().Be(errorMessage);
+        dbEvents.Single(r => r.Id == receivedEvent.Id).UpdateTimestamp.Should().Be(currentTime);
+    }
 
     [Fact]
     public async Task GetPredecessorIds_ReturnsCorrectIds()

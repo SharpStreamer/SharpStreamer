@@ -81,12 +81,8 @@ internal class EventsProcessor(
                 receivedEvent.Status = newStatus;
                 receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
                 processedEvents.Add(id, newStatus);
+                await eventsRepository.MarkPostProcessing(receivedEvent, CancellationToken.None);
             }
-        }
-
-        if (events.Any())
-        {
-            await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
         }
     }
 
@@ -96,6 +92,11 @@ internal class EventsProcessor(
         ConsumerMetadata? consumerMetadata = null;
         try
         {
+            await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
+                             $"{options.Value.ConsumerGroup}-{receivedEvent.EventKey}",
+                             TimeSpan.FromMinutes(5),
+                             CancellationToken.None));
+
             (string rawEventBody, string eventName) = GetEventBodyAndName(receivedEvent.Content);
 
             consumerMetadata = cacheService.GetConsumerMetadata(eventName);
