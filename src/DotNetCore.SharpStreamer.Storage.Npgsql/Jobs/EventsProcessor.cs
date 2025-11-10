@@ -89,14 +89,14 @@ internal class EventsProcessor(
     private async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent
         (ReceivedEvent receivedEvent, IEventsRepository eventsRepository, Dictionary<Guid, EventStatus> processedEvents)
     {
-        await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
-                         $"{options.Value.ConsumerGroup}-{receivedEvent.EventKey}",
-                         TimeSpan.FromMinutes(5),
-                         CancellationToken.None));
-
         ConsumerMetadata? consumerMetadata = null;
         try
         {
+            await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
+                             $"{options.Value.ConsumerGroup}-{receivedEvent.EventKey}",
+                             TimeSpan.FromMinutes(5),
+                             CancellationToken.None));
+
             (string rawEventBody, string eventName) = GetEventBodyAndName(receivedEvent.Content);
 
             consumerMetadata = cacheService.GetConsumerMetadata(eventName);
