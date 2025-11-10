@@ -81,18 +81,19 @@ internal class EventsProcessor(
                 receivedEvent.Status = newStatus;
                 receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
                 processedEvents.Add(id, newStatus);
+                await eventsRepository.MarkPostProcessing(receivedEvent, CancellationToken.None);
             }
-        }
-
-        if (events.Any())
-        {
-            await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
         }
     }
 
     private async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent
         (ReceivedEvent receivedEvent, IEventsRepository eventsRepository, Dictionary<Guid, EventStatus> processedEvents)
     {
+        await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
+                         $"{options.Value.ConsumerGroup}-{receivedEvent.EventKey}",
+                         TimeSpan.FromMinutes(5),
+                         CancellationToken.None));
+
         ConsumerMetadata? consumerMetadata = null;
         try
         {
