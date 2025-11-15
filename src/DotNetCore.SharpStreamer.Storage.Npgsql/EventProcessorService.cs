@@ -1,14 +1,17 @@
 using System.Text.Json;
 using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
+using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Services.Models;
 using DotNetCore.SharpStreamer.Storage.Npgsql.Abstractions;
 using DotNetCore.SharpStreamer.Utils;
+using Medallion.Threading;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql;
 
@@ -16,6 +19,8 @@ internal class EventProcessorService(
     ICacheService cacheService,
     IServiceScopeFactory serviceScopeFactory,
     IEventsRepository eventsRepository,
+    IOptions<SharpStreamerOptions> options,
+    IDistributedLockProvider lockProvider,
     ILogger<EventProcessorService> logger) : IEventProcessor
 {
     public async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent(ReceivedEvent receivedEvent, Dictionary<Guid, EventStatus> processedEvents)
@@ -23,6 +28,11 @@ internal class EventProcessorService(
         ConsumerMetadata? consumerMetadata = null;
         try
         {
+            await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
+                             $"{options.Value.ConsumerGroup}-{receivedEvent.EventKey}",
+                             TimeSpan.FromMinutes(5),
+                             CancellationToken.None));
+
             (string rawEventBody, string eventName) = GetEventBodyAndName(receivedEvent.Content);
 
             consumerMetadata = cacheService.GetConsumerMetadata(eventName);
