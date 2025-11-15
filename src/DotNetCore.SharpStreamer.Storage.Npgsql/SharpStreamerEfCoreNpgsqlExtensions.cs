@@ -4,6 +4,7 @@ using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Services.Abstractions;
+using DotNetCore.SharpStreamer.Storage.Npgsql.Abstractions;
 using DotNetCore.SharpStreamer.Storage.Npgsql.Jobs;
 using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,8 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
         services.AddHostedService<ProcessedEventsCleaner>();
         services.AddHostedService<ProducedEventsCleaner>();
         services.AddSingleton<IMigrationService, MigrationService<TDbContext>>();
+        services.AddScoped<IEventsProcessor, EventsProcessorService>();
+        services.AddScoped<IEventProcessor, EventProcessorService>();
         return services;
     }
 
