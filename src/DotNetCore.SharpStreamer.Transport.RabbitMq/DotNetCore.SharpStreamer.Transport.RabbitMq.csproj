@@ -16,7 +16,7 @@
 
     <PropertyGroup>
         <PackageId>DotNetCore.SharpStreamer.Transport.RabbitMq</PackageId>
-        <Version>3.0.1</Version>
+        <Version>3.0.2</Version>
         <Authors>SandrikaMgeli</Authors>
         <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
     </PropertyGroup>
