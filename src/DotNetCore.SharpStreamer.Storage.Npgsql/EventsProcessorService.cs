@@ -38,12 +38,8 @@ internal class EventsProcessorService(
                 receivedEvent.Status = newStatus;
                 receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
                 processedEvents.Add(id, newStatus);
+                await eventsRepository.MarkPostProcessing(receivedEvent, CancellationToken.None);
             }
-        }
-
-        if (events.Any())
-        {
-            await eventsRepository.MarkPostProcessing(events, CancellationToken.None);
         }
     }
 }
