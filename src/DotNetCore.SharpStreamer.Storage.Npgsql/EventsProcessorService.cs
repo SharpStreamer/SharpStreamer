@@ -3,7 +3,6 @@ using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
 using DotNetCore.SharpStreamer.Storage.Npgsql.Abstractions;
-using DotNetCore.SharpStreamer.Storage.Npgsql.Jobs;
 using Medallion.Threading;
 using Microsoft.Extensions.Options;
 
@@ -19,7 +18,7 @@ internal class EventsProcessorService(
     {
         List<ReceivedEvent> events;
         await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
-                         $"{options.Value.ConsumerGroup}-{nameof(EventsProcessor)}",
+                         $"{options.Value.ConsumerGroup}-{nameof(EventsProcessorService)}",
                          TimeSpan.FromMinutes(2),
                          CancellationToken.None))
         {

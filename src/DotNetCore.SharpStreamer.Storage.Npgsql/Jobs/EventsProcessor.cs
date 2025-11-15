@@ -1,10 +1,14 @@
-﻿using DotNetCore.SharpStreamer.Options;
+﻿using System.Runtime.CompilerServices;
+using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Storage.Npgsql.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+[assembly: InternalsVisibleTo("Storage.Npgsql.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace DotNetCore.SharpStreamer.Storage.Npgsql.Jobs;
 
