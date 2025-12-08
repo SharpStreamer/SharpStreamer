@@ -113,6 +113,7 @@ The architecture is centered around two main flows: Event Publishing (Outbox) an
        .AddSharpStreamerStorageNpgsql<RabbitNpgDbContext>()
        .AddSharpStreamerTransportRabbitMq();
    ```
+   Project uses MediatR V12 because it was opensource project under MIT licence. Also same version is forked under this organization.
 * Package publishing instructions:
     * Navigate into class library project where you want to publish package
     * Then pack this project in release mode:
