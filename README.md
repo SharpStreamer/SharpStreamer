@@ -1,3 +1,4 @@
+* STORAGE: Npgsql AND TRANSPORT: RabbitMq are only stable versions right now.
 * KAFKA
     * In case of kafka, topics defined in appsettings, must be pre-created in kafka. library doesn't handle topic creation on it's own
       and it needs to be predefined.
