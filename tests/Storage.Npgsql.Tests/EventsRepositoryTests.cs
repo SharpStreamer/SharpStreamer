@@ -15,30 +15,29 @@ using Storage.Npgsql.Tests.Helpers;
 namespace Storage.Npgsql.Tests;
 
 [Collection(nameof(GlobalCollection))]
-public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLifetime
+public class EventsRepositoryTests : DatabaseTest
 {
-    private readonly DbContext _dbContext;
     private readonly Fixture _fixture;
     private readonly EventsRepository<PostgresTestingDbContext> _eventsRepository;
-    private readonly ILogger<EventsRepository<PostgresTestingDbContext>> _logger;
     private readonly IOptions<SharpStreamerOptions> _sharpStreamerOptions;
     private readonly ITimeService _timeService;
     private readonly Func<DbContext> _dbContextFactory;
     private readonly IMigrationService _migrationService;
+
     public EventsRepositoryTests(
         PostgresDbFixture postgresDbFixture,
-        DataFixtureConfig dataFixtureConfig)
+        DataFixtureConfig dataFixtureConfig) : base(postgresDbFixture)
     {
-        _dbContext = postgresDbFixture.DbContextFactory();
         _dbContextFactory = postgresDbFixture.DbContextFactory;
         _fixture = dataFixtureConfig.Fixture;
         _migrationService = Substitute.For<IMigrationService>();
-        _logger = Substitute.For<ILogger<EventsRepository<PostgresTestingDbContext>>>();
+        ILogger<EventsRepository<PostgresTestingDbContext>> logger =
+            Substitute.For<ILogger<EventsRepository<PostgresTestingDbContext>>>();
         _sharpStreamerOptions = Substitute.For<IOptions<SharpStreamerOptions>>();
         _timeService = Substitute.For<ITimeService>();
         _eventsRepository = new EventsRepository<PostgresTestingDbContext>(
-            (PostgresTestingDbContext)_dbContext,
-            _logger,
+            (PostgresTestingDbContext)DbContext,
+            logger,
             _sharpStreamerOptions,
             _timeService,
             _migrationService);
@@ -71,8 +70,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
             receivedEvents[8],
             receivedEvents[9],
         ];
-        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
         List<ReceivedEvent> returnedEvents = await _eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
@@ -103,8 +102,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         ];
         expectedEventsToBeReturned = expectedEventsToBeReturned.OrderBy(e => e.Timestamp).Take(3).ToList();
 
-        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
         List<ReceivedEvent> returnedEvents = await _eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
@@ -139,8 +138,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
             expectedEvent.RetryCount = 1;
         }
 
-        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await _eventsRepository.GetAndMarkEventsForProcessing(CancellationToken.None);
@@ -169,8 +168,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
         _timeService.GetUtcNow().Returns(currentTime);
         List<ReceivedEvent> receivedEvents = _fixture.CreateMany<ReceivedEvent>(3).ToList();
-        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
+        await DbContext.SaveChangesAsync();
 
         receivedEvents[0].Status = EventStatus.Failed;
         receivedEvents[0].ErrorMessage = "Error message 1";
@@ -211,8 +210,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
         _timeService.GetUtcNow().Returns(currentTime);
         ReceivedEvent receivedEvent = _fixture.Create<ReceivedEvent>();
-        _dbContext.Set<ReceivedEvent>().AddRange(receivedEvent);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(receivedEvent);
+        await DbContext.SaveChangesAsync();
 
         receivedEvent.Status = EventStatus.Failed;
         receivedEvent.ErrorMessage = errorMessage;
@@ -262,8 +261,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
 
         List<Guid> expectedIds = new List<Guid> { allEvents[0].Id };
 
-        _dbContext.Set<ReceivedEvent>().AddRange(allEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(allEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
         List<Guid> returnedIds = await _eventsRepository.GetPredecessorIds(eventKey, currentTime, CancellationToken.None);
@@ -310,8 +309,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         List<PublishedEvent> expectedEventsToBeReturned = 
             [allEvents[2], allEvents[0]]; // Ordered by SentAt and limited to 3
 
-        _dbContext.Set<PublishedEvent>().AddRange(allEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<PublishedEvent>().AddRange(allEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
         List<PublishedEvent> returnedEvents = await _eventsRepository.GetEventsToPublish(CancellationToken.None);
@@ -337,8 +336,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         List<PublishedEvent> publishedEvents = _fixture.CreateMany<PublishedEvent>(3).ToList();
         publishedEvents.ForEach(e => e.Status = EventStatus.None); // Initial status
         
-        _dbContext.Set<PublishedEvent>().AddRange(publishedEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<PublishedEvent>().AddRange(publishedEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await _eventsRepository.MarkPostPublishAttempt(publishedEvents);
@@ -359,8 +358,8 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         List<ReceivedEvent> newEvents = _fixture.CreateMany<ReceivedEvent>(2).ToList();
         ReceivedEvent existingEvent = _fixture.Create<ReceivedEvent>();
         
-        _dbContext.Set<ReceivedEvent>().Add(existingEvent);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().Add(existingEvent);
+        await DbContext.SaveChangesAsync();
 
         // Create a list where one event has a conflicting ID
         newEvents[1].Id = existingEvent.Id;
@@ -421,11 +420,11 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
 
         List<Guid> expectedIds = [ allEvents[0].Id, allEvents[3].Id ];
         
-        _dbContext.Set<PublishedEvent>().AddRange(allEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<PublishedEvent>().AddRange(allEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         List<PublishedEvent> returnedEvents = await _eventsRepository.GetProducedEventsByStatusAndElapsedTimespan(
             EventStatus.None, timeSpan, CancellationToken.None);
 
@@ -466,11 +465,11 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
 
         List<Guid> expectedIds = [ allEvents[0].Id, allEvents[3].Id ];
         
-        _dbContext.Set<ReceivedEvent>().AddRange(allEvents);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<ReceivedEvent>().AddRange(allEvents);
+        await DbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         List<ReceivedEvent> returnedEvents = await _eventsRepository.GetReceivedEventsByStatusAndElapsedTimespan(
             EventStatus.Failed, timeSpan, CancellationToken.None);
 
@@ -485,11 +484,11 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         List<PublishedEvent> allEvents = _fixture.CreateMany<PublishedEvent>(3).ToList();
         List<Guid> idsToDelete = [ allEvents[0].Id, allEvents[2].Id ];
 
-        _dbContext.Set<PublishedEvent>().AddRange(allEvents);
-        await _dbContext.SaveChangesAsync();
-        _dbContext.ChangeTracker.Clear();
+        DbContext.Set<PublishedEvent>().AddRange(allEvents);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         
-        (await _dbContext.Set<PublishedEvent>().CountAsync()).Should().Be(3);
+        (await DbContext.Set<PublishedEvent>().CountAsync()).Should().Be(3);
 
         // Act
         await _eventsRepository.DeleteProducedEventsById(idsToDelete, CancellationToken.None);
@@ -509,11 +508,11 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
         List<ReceivedEvent> allEvents = _fixture.CreateMany<ReceivedEvent>(3).ToList();
         List<Guid> idsToDelete = [ allEvents[0].Id, allEvents[2].Id ];
 
-        _dbContext.Set<ReceivedEvent>().AddRange(allEvents);
-        await _dbContext.SaveChangesAsync();
-        _dbContext.ChangeTracker.Clear();
+        DbContext.Set<ReceivedEvent>().AddRange(allEvents);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         
-        (await _dbContext.Set<ReceivedEvent>().CountAsync()).Should().Be(3);
+        (await DbContext.Set<ReceivedEvent>().CountAsync()).Should().Be(3);
 
         // Act
         await _eventsRepository.DeleteReceivedEventsById(idsToDelete, CancellationToken.None);
@@ -555,17 +554,5 @@ public class EventsRepositoryTests : IClassFixture<PostgresDbFixture>, IAsyncLif
 
         receivedEvents[1].RetryCount = 50;
         return receivedEvents;
-    }
-
-    public Task InitializeAsync()
-    {
-        return Task.CompletedTask;
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _dbContext.Set<ReceivedEvent>().ExecuteDeleteAsync();
-        await _dbContext.Set<PublishedEvent>().ExecuteDeleteAsync();
-        await _dbContext.DisposeAsync();
     }
 }
