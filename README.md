@@ -129,3 +129,6 @@ The architecture is centered around two main flows: Event Publishing (Outbox) an
                 --api-key {YOUR_API_KEY}
     * This will publish this package into nuget server provided in this script
     * Change versions in csproj files.
+* Alternatively you can run prewritten publishing scripts. It will automatically take version numbers and publish it using your provided token.
+  *     EXAMPLE:  dotnet run .\PublishProjectScript.cs -- DotNetCore.SharpStreamer.Transport.RabbitMq {YOUR_API_KEY}
+  *     USAGE: dotnet run .\PublishProjectScript.cs -- {PROJECT_NAME} {YOUR_API_KEY}

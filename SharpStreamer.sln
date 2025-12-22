@@ -23,6 +23,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "items", "items", "{EAD44F01-461C-4B0E-AFDB-BA608407CBD2}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		PublishProjectScript.cs = PublishProjectScript.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5F349B50-49FD-4AF2-8B94-E297D2F87358}"

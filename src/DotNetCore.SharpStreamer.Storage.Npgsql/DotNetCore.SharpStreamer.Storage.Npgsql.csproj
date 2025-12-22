@@ -36,7 +36,7 @@ implicitly (Without explicitly installing it.).
 
     <PropertyGroup>
         <PackageId>DotNetCore.SharpStreamer.Storage.Npgsql</PackageId>
-        <Version>3.0.2</Version>
+        <Version>3.0.3</Version>
         <Authors>SandrikaMgeli</Authors>
         <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
     </PropertyGroup>
