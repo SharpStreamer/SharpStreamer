@@ -31,8 +31,8 @@ public class RabbitTransportService(
             ContentEncoding = "utf-8",
             Headers = new Dictionary<string, object?>
             {
-                { nameof(PublishedEvent.Id), publishedEvent.Id.ToString() },
-                { nameof(PublishedEvent.SentAt), publishedEvent.SentAt.ToString() }
+                { nameof(PublishedEvent.Id), Encoding.UTF8.GetBytes(publishedEvent.Id.ToString()) },
+                { nameof(PublishedEvent.SentAt), Encoding.UTF8.GetBytes(publishedEvent.SentAt.ToString()) }
             },
         };
         ReadOnlyMemory<byte> body = Encoding.UTF8.GetBytes(publishedEvent.Content);
