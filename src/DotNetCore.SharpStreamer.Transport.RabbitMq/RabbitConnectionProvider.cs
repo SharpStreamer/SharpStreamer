@@ -44,7 +44,14 @@ public class RabbitConnectionProvider(
 
     private static void SetupConnectionFactoryAutomaticParts(ConnectionFactory valueConnectionSettings)
     {
-        
+        valueConnectionSettings.AutomaticRecoveryEnabled = true;
+        valueConnectionSettings.TopologyRecoveryEnabled = true; // Re-declares queues, exchanges, and bindings
+    
+        // How long to wait before trying to reconnect.
+        valueConnectionSettings.NetworkRecoveryInterval = TimeSpan.FromSeconds(10);
+    
+        // Heartbeats help detect a "zombie" connection.
+        valueConnectionSettings.RequestedHeartbeat = TimeSpan.FromSeconds(30);
     }
 
     public void Dispose()
