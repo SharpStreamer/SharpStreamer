@@ -55,17 +55,18 @@ public class EventsPublisher(
         IEventsRepository eventsRepository = scope.ServiceProvider.GetRequiredService<IEventsRepository>();
         ITransportService transportService = scope.ServiceProvider.GetRequiredService<ITransportService>();
 
-        await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
+        await using IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
                          $"{options.Value.ConsumerGroup}-{nameof(EventsPublisher)}",
-                         TimeSpan.FromMinutes(2),
-                         CancellationToken.None)) ;
+                         TimeSpan.FromMinutes(10),
+                         CancellationToken.None);
         
         List<PublishedEvent> publishedEvents = await eventsRepository.GetEventsToPublish(CancellationToken.None);
 
         if (publishedEvents.Any())
         {
-            await transportService.Publish(publishedEvents, CancellationToken.None);
-            await eventsRepository.MarkPostPublishAttempt(publishedEvents, CancellationToken.None);
+            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            await transportService.Publish(publishedEvents, cts.Token);
+            await eventsRepository.MarkPostPublishAttempt(publishedEvents, cts.Token);
         }
     }
 }
