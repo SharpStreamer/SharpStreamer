@@ -14,6 +14,13 @@ builder.Services.AddDbContext<NpgDbContext>(options =>
 {
     options.UseNpgsql("Pooling=True;Maximum Pool Size=100;Minimum Pool Size=1;Connection Idle Lifetime=60;Host=localhost;Port=5432;Database=npg_npg_sample;Username=admin;Password=admin");
 });
+
+builder.Services.AddMediatR(options =>
+{
+    options.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
+    options.Lifetime = ServiceLifetime.Transient;
+});
+
 builder.Services
     .AddSharpStreamer("SharpStreamerSettings", Assembly.GetExecutingAssembly())
     .AddSharpStreamerStorageNpgsql<NpgDbContext>()
