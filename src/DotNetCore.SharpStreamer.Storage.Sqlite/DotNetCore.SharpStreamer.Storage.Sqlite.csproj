@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DistributedLock.FileSystem" Version="1.0.3" PrivateAssets="compile"/>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" PrivateAssets="compile"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <PackageId>DotNetCore.SharpStreamer.Storage.Sqlite</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>SandrikaMgeli</Authors>
+        <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
+    </PropertyGroup>
+</Project>

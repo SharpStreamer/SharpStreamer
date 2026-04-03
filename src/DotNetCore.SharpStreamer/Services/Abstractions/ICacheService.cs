@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using DotNetCore.SharpStreamer.Services.Models;
 
 [assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.Storage.Npgsql")]
+[assembly: InternalsVisibleTo("DotNetCore.SharpStreamer.Storage.Sqlite")]
 
 namespace DotNetCore.SharpStreamer.Services.Abstractions;
 

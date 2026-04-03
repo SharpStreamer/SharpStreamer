@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DotNetCore.SharpStreamer\DotNetCore.SharpStreamer.csproj" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <PackageId>DotNetCore.SharpStreamer.Transport.Sqlite</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>SandrikaMgeli</Authors>
+        <RepositoryUrl>https://github.com/SharpStreamer/SharpStreamer</RepositoryUrl>
+    </PropertyGroup>
+
+</Project>
