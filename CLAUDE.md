@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is SharpStreamer
 
-SharpStreamer is a .NET library implementing the **Transactional Outbox/Inbox Pattern** for reliable, ordered event communication between microservices. It supports RabbitMQ, Kafka, and PostgreSQL as message brokers, with PostgreSQL (Npgsql) as the storage backend.
+SharpStreamer is a .NET library implementing the **Transactional Outbox/Inbox Pattern** for reliable, ordered event communication between microservices. It supports RabbitMQ, Kafka, PostgreSQL, and SQLite as message brokers/transports, with PostgreSQL (Npgsql) and SQLite as storage backends.
 
 ## Build & Test Commands
 
@@ -13,30 +13,50 @@ SharpStreamer is a .NET library implementing the **Transactional Outbox/Inbox Pa
 dotnet build
 dotnet build --configuration Release
 
-# Run all tests (requires Docker for PostgreSQL via Testcontainers)
+# Run Npgsql tests (requires Docker for PostgreSQL via Testcontainers)
 dotnet test tests/Storage.Npgsql.Tests/Storage.Npgsql.Tests.csproj
 
+# Run SQLite tests (no Docker required)
+dotnet test tests/Storage.Sqlite.Tests/Storage.Sqlite.Tests.csproj
+
 # Run a single test
-dotnet test tests/Storage.Npgsql.Tests/Storage.Npgsql.Tests.csproj --filter "FullyQualifiedName~MethodName"
-
-# Pack NuGet packages
-dotnet pack src/<ProjectName>/<ProjectName>.csproj --configuration Release
-
-# Publish to NuGet (uses the helper script)
-dotnet run PublishProjectScript.cs -- <ProjectName> <NUGET_API_KEY>
+dotnet test tests/Storage.Sqlite.Tests/Storage.Sqlite.Tests.csproj --filter "FullyQualifiedName~MethodName"
 ```
+
+## Publishing NuGet Packages
+
+The helper script `PublishProjectScript.cs` auto-reads the version from the `.csproj` file, packs, and pushes:
+```bash
+dotnet run .\PublishProjectScript.cs -- <PROJECT_NAME> <NUGET_API_KEY>
+# Example: dotnet run .\PublishProjectScript.cs -- DotNetCore.SharpStreamer.Transport.RabbitMq YOUR_KEY
+```
+
+Manual alternative:
+```bash
+# 1. Navigate into the class library project directory
+# 2. Pack in release mode
+dotnet pack --configuration Release
+# 3. Push (the script reads version from csproj automatically)
+dotnet nuget push .\bin\Release\<PackageName>.<Version>.nupkg -s https://api.nuget.org/v3/index.json -k <YOUR_API_KEY>
+```
+
+Remember to update the `<Version>` in the `.csproj` file before publishing a new version.
 
 ## Project Layout
 
 ```
 src/
-  DotNetCore.SharpStreamer/                   # Core abstractions (IStreamerBus, Event<T>, attributes)
-  DotNetCore.SharpStreamer.Storage.Npgsql/    # EF Core + PostgreSQL storage (Outbox/Inbox tables)
-  DotNetCore.SharpStreamer.Transport.Npgsql/  # PostgreSQL as message broker
-  DotNetCore.SharpStreamer.Transport.Kafka/   # Kafka transport
+  DotNetCore.SharpStreamer/                    # Core abstractions (IStreamerBus, Event<T>, attributes)
+  DotNetCore.SharpStreamer.Storage.Npgsql/     # EF Core + PostgreSQL storage (Outbox/Inbox tables)
+  DotNetCore.SharpStreamer.Storage.Sqlite/     # EF Core + SQLite storage (Outbox/Inbox tables)
+  DotNetCore.SharpStreamer.Transport.Npgsql/   # PostgreSQL as message broker (loopback)
+  DotNetCore.SharpStreamer.Transport.Sqlite/   # SQLite as message broker (loopback)
+  DotNetCore.SharpStreamer.Transport.Kafka/    # Kafka transport
   DotNetCore.SharpStreamer.Transport.RabbitMq/ # RabbitMQ transport (most stable)
-samples/                                       # One sample per broker/storage combination
-tests/Storage.Npgsql.Tests/                    # XUnit integration tests (Testcontainers + PostgreSQL)
+samples/                                        # One sample per broker/storage combination
+tests/
+  Storage.Npgsql.Tests/                         # XUnit integration tests (Testcontainers + PostgreSQL)
+  Storage.Sqlite.Tests/                         # XUnit integration tests (temp file SQLite, no Docker)
 ```
 
 ## Core Architecture
@@ -44,7 +64,7 @@ tests/Storage.Npgsql.Tests/                    # XUnit integration tests (Testco
 ### Key Abstractions (Core project)
 
 - **`IStreamerBus`** — Main interface. `PublishAsync<T>()` stores the event in the outbox within the current DB transaction. `PublishDelayedAsync<T>()` schedules events with a delay using a random GUID as the eventKey (no ordering guarantee).
-- **`Event<TId>`** — Base class. `PublishedEvent` and `ReceivedEvent` are the concrete types stored in `sharp_streamer.published_events` and `sharp_streamer.received_events`.
+- **`Event<TId>`** — Base class. `PublishedEvent` and `ReceivedEvent` are the concrete types stored in `published_events` and `received_events` tables.
 - **`[PublishEvent(eventName, topicName)]`** — Attribute on event DTOs marking the broker topic and event type.
 - **`[ConsumeEvent(eventName, checkPredecessor)]`** — Attribute on handler DTOs marking what events they handle.
 
@@ -55,22 +75,27 @@ The `eventKey` parameter is the ordering unit:
 - Different `eventKey` → eligible for parallel processing
 - Events with `Failed` status **block** all subsequent events with the same key — must be resolved manually
 
-### Storage Layer (Npgsql project)
+### Storage Layer
 
-- **`StreamerBusNpgsql<TDbContext>`** — EF Core implementation of `IStreamerBus`; scoped lifetime, tied to the caller's `DbContext`
-- **`EventsRepository<TDbContext>`** — All DB queries (uses Dapper for reads, EF for writes)
-- **Background hosted services:**
-  - `EventsPublisher` — Polls outbox and sends events to the broker
-  - `EventsProcessor` — Polls inbox and dispatches events to MediatR handlers
-  - `ProcessedEventsCleaner` / `ProducedEventsCleaner` — Housekeeping
-- **Distributed locking** via `DistributedLock.Postgres` to coordinate across instances
+Each storage implementation provides the same set of components:
+
+- **`StreamerBus<TDbContext>`** — EF Core implementation of `IStreamerBus`; scoped lifetime, tied to the caller's `DbContext`
+- **`EventsRepository<TDbContext>`** — All DB queries via raw SQL (`SqlQueryRaw`/`ExecuteSqlRawAsync`)
+- **Background hosted services:** `EventsPublisher`, `EventsProcessor`, `ProcessedEventsCleaner`, `ProducedEventsCleaner`
+- **Distributed locking:** Npgsql uses `DistributedLock.Postgres`; SQLite uses `DistributedLock.FileSystem`
+
+**SQLite-specific differences from Npgsql:**
+- No schema prefix (tables are `published_events`/`received_events` directly)
+- Uses `EnsureCreated()` instead of EF Core migrations
+- Parameterized `IN (...)` clauses instead of PostgreSQL `ANY()` arrays
+- Batch `MarkPostProcessing` uses individual UPDATE statements instead of CASE (Guid format mismatch with inline SQL literals in SQLite)
 
 ### Transport Layer
 
 Each transport implements a consumer and a transport service:
 - **RabbitMQ**: `RabbitConsumer` uses Single Active Consumer (SAC) for ordered delivery per queue; auto-creates queues and exchange bindings
 - **Kafka**: `KafkaConsumer` relies on partition-based ordering; topics must be **pre-created manually**
-- **Npgsql**: Uses PostgreSQL LISTEN/NOTIFY as a lightweight broker
+- **Npgsql/Sqlite**: Loopback transports — converts published events to received events in the same database
 
 ### MediatR Integration
 
@@ -103,3 +128,4 @@ builder.Services.AddSharpStreamer(...);
 - Kafka topics must be created manually before the service starts
 - The recommended stable combination is **RabbitMQ transport + Npgsql storage**
 - `ProcessingTimeoutMinutes` controls how long a single event handler can run; the distributed lock timeout is always `ProcessingTimeoutMinutes + 2`
+- `ICacheService` is `internal` — new storage projects need `InternalsVisibleTo` in `ICacheService.cs`
