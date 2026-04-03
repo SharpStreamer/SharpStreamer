@@ -86,7 +86,7 @@ Each storage implementation provides the same set of components:
 
 **SQLite-specific differences from Npgsql:**
 - No schema prefix (tables are `published_events`/`received_events` directly)
-- Uses `EnsureCreated()` instead of EF Core migrations
+- Uses EF Core migrations (same as Npgsql) — generate with `dotnet ef migrations add <Name> --project src/DotNetCore.SharpStreamer.Storage.Sqlite`
 - Parameterized `IN (...)` clauses instead of PostgreSQL `ANY()` arrays
 - Batch `MarkPostProcessing` uses individual UPDATE statements instead of CASE (Guid format mismatch with inline SQL literals in SQLite)
 

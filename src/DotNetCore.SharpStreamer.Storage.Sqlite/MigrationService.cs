@@ -41,7 +41,7 @@ public class MigrationService<TDbContext> : IMigrationService where TDbContext :
                 .UseSqlite(_connectionString)
                 .Options;
             using DbContext context = new SqliteDbContext(options);
-            context.Database.EnsureCreated();
+            context.Database.Migrate();
             _isMigrationApplied = true;
             _logger.LogInformation("SharpStreamer SQLite migrated");
         }
