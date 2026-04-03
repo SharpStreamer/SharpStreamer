@@ -30,7 +30,7 @@ internal class EventProcessorService(
         {
             await using (IDistributedSynchronizationHandle _ = await lockProvider.AcquireLockAsync(
                              $"{options.Value.ConsumerGroup}-{receivedEvent.EventKey}",
-                             TimeSpan.FromMinutes(10),
+                             TimeSpan.FromMinutes(options.Value.ProcessingTimeoutMinutes + 2),
                              CancellationToken.None));
 
             (string rawEventBody, string eventName) = GetEventBodyAndName(receivedEvent.Content);
@@ -59,7 +59,7 @@ internal class EventProcessorService(
             await using (AsyncServiceScope processingScope = serviceScopeFactory.CreateAsyncScope())
             {
                 IMediator mediator = processingScope.ServiceProvider.GetRequiredService<IMediator>();
-                CancellationTokenSource cancellationSource = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+                CancellationTokenSource cancellationSource = new CancellationTokenSource(TimeSpan.FromMinutes(options.Value.ProcessingTimeoutMinutes));
                 await mediator.Send(@event, cancellationSource.Token);
             }
 

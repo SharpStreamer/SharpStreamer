@@ -24,4 +24,11 @@ public class SharpStreamerOptions
     /// </summary>
     [Required]
     public int ProcessingBatchSize { get; set; }
+
+    /// <summary>
+    /// Determines, how many minutes a single event handler is allowed to run before its cancellation token is cancelled.
+    /// The distributed lock timeout will be set to this value plus 2 minutes.
+    /// </summary>
+    [Required]
+    public int ProcessingTimeoutMinutes { get; set; }
 }
