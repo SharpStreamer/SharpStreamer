@@ -33,6 +33,7 @@ public class TransportServiceNpgsql(
                 Timestamp = currentTime.AddMilliseconds(index),
                 Status = EventStatus.None,
                 EventKey = publishedEvent.EventKey,
+                NextExecutionTimestamp = currentTime.AddMilliseconds(index),
             }).ToList();
 
         await eventsRepository.SaveConsumedEvents(receivedEvents, cancellationToken);

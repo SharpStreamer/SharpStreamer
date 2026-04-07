@@ -94,6 +94,10 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasDefaultValue(null)
                 .IsRequired(false);
 
+            entity.Property(e => e.NextExecutionTimestamp)
+                .HasColumnType("timestamptz")
+                .IsRequired();
+
             entity.Property(e => e.Partition)
                 .HasMaxLength(500)
                 .HasDefaultValue(null)
@@ -109,6 +113,9 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
 
             entity.HasIndex(e => new { e.Status, e.UpdateTimestamp, e.RetryCount })
                 .HasDatabaseName("IX_Events_For_Processing");
+
+            entity.HasIndex(e => new { e.Status, e.NextExecutionTimestamp, e.RetryCount })
+                .HasDatabaseName("IX_Events_For_Processing_New");
 
             entity.HasIndex(e => new { e.Timestamp })
                 .HasDatabaseName("IX_ReceivedEvents_Timestamp")

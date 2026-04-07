@@ -12,7 +12,11 @@
 
     <ItemGroup>
       <PackageReference Include="DistributedLock.FileSystem" Version="1.0.3" PrivateAssets="compile"/>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" PrivateAssets="compile"/>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" PrivateAssets="compile" />
     </ItemGroup>
 
     <PropertyGroup>

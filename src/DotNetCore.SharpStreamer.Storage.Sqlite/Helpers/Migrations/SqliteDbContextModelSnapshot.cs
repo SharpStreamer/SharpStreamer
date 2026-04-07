@@ -87,6 +87,9 @@ namespace DotNetCore.SharpStreamer.Storage.Sqlite.Helpers.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset>("NextExecutionTimestamp")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Partition")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
@@ -122,6 +125,9 @@ namespace DotNetCore.SharpStreamer.Storage.Sqlite.Helpers.Migrations
                     b.HasIndex("EventKey", "Status", "Timestamp")
                         .HasDatabaseName("IX_EventKey_Status")
                         .HasFilter("\"Status\" = 0 OR \"Status\" = 3 OR \"Status\" = 1");
+
+                    b.HasIndex("Status", "NextExecutionTimestamp", "RetryCount")
+                        .HasDatabaseName("IX_Events_For_Processing_New");
 
                     b.HasIndex("Status", "UpdateTimestamp", "RetryCount")
                         .HasDatabaseName("IX_Events_For_Processing");

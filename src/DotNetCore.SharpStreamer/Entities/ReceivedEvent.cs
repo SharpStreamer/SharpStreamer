@@ -12,4 +12,6 @@ public class ReceivedEvent : Event<Guid>
     public DateTimeOffset? UpdateTimestamp { get; set; }
 
     public string Partition { get; set; }
+
+    public DateTimeOffset NextExecutionTimestamp { get; set; }
 }

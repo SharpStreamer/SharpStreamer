@@ -32,7 +32,7 @@ public class EventsRepository<TDbContext> : IEventsRepository
     }
     public async Task<List<ReceivedEvent>> GetAndMarkEventsForProcessing(CancellationToken cancellationToken = default)
     {
-        DateTimeOffset cutOffTime = _timeService.GetUtcNow().AddSeconds(-20);
+        DateTimeOffset cutOffTime = _timeService.GetUtcNow();
         const string retrieveQuery = @"
                                         SELECT
                                             r.""Id"",
@@ -46,9 +46,10 @@ public class EventsRepository<TDbContext> : IEventsRepository
                                             r.""Status"",
                                             r.""Timestamp"",
                                             r.""Topic"",
-                                            r.""UpdateTimestamp""
+                                            r.""UpdateTimestamp"",
+                                            r.""NextExecutionTimestamp""
                                         FROM sharp_streamer.received_events AS r
-                                        WHERE r.""Status"" IN (3, 0) AND (r.""UpdateTimestamp"" IS NULL OR r.""UpdateTimestamp"" < {0}) AND r.""RetryCount"" < 50
+                                        WHERE r.""Status"" IN (3, 0) AND r.""NextExecutionTimestamp"" < {0} AND r.""RetryCount"" < 50
                                         ORDER BY r.""Timestamp"" ASC
                                         LIMIT {1};";
 
@@ -74,35 +75,24 @@ public class EventsRepository<TDbContext> : IEventsRepository
         return @events;
     }
 
-    public async Task MarkPostProcessing(List<ReceivedEvent> receivedEvents, CancellationToken cancellationToken = default)
-    {
-        string statusUpdates = string.Join("\n", receivedEvents.Select(e => $"WHEN '{e.Id}' THEN {(int)e.Status}"));
-        string errorMessageUpdates = string.Join("\n", receivedEvents.Select(e => $"WHEN '{e.Id}' THEN {CalculateErrorMessageValue(e)}"));
-        List<Guid> ids = receivedEvents.Select(e => e.Id).ToList();
-
-        string updateSql = $@"
-                    UPDATE sharp_streamer.received_events
-                    SET ""Status"" = CASE ""Id""
-                                     {statusUpdates}
-                                     END,
-                        ""ErrorMessage"" = CASE ""Id""
-                                           {errorMessageUpdates}
-                                           END,
-                        ""UpdateTimestamp"" = {{0}}
-                    WHERE ""Id"" = ANY ({{1}});";
-        await _dbContext.Database.ExecuteSqlRawAsync(updateSql, _timeService.GetUtcNow(), ids);
-    }
-
     public async Task MarkPostProcessing(ReceivedEvent receivedEvent, CancellationToken cancellationToken = default)
     {
+        DateTimeOffset currentTime = _timeService.GetUtcNow();
         cancellationToken.ThrowIfCancellationRequested();
         string updateSql = @"
                     UPDATE sharp_streamer.received_events
                     SET ""Status"" = {0},
                         ""ErrorMessage"" = {1},
-                        ""UpdateTimestamp"" = {2}
-                    WHERE ""Id"" = {3};";
-        await _dbContext.Database.ExecuteSqlRawAsync(updateSql, receivedEvent.Status, receivedEvent.ErrorMessage, _timeService.GetUtcNow(), receivedEvent.Id);
+                        ""UpdateTimestamp"" = {2},
+                        ""NextExecutionTimestamp"" = {3}
+                    WHERE ""Id"" = {4};";
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            updateSql,
+            receivedEvent.Status,
+            receivedEvent.ErrorMessage,
+            currentTime,
+            receivedEvent.NextExecutionTimestamp,
+            receivedEvent.Id);
     }
 
     public async Task<List<Guid>> GetPredecessorIds(string eventKey, DateTimeOffset time, CancellationToken cancellationToken = default)
@@ -192,7 +182,8 @@ public class EventsRepository<TDbContext> : IEventsRepository
                                 ""ErrorMessage"",
                                 ""UpdateTimestamp"",
                                 ""EventKey"",
-                                ""Partition""
+                                ""Partition"",
+                                ""NextExecutionTimestamp""
                             )
                             VALUES");
         List<object> parameters = [];
@@ -201,18 +192,19 @@ public class EventsRepository<TDbContext> : IEventsRepository
             ReceivedEvent receivedEvent = receivedEvents[i];
             queryStringBuilder.Append($@"
                             (
-                                {{{i * 12}}},
-                                {{{i * 12 + 1}}},
-                                {{{i * 12 + 2}}},
-                                {{{i * 12 + 3}}}::json,
-                                {{{i * 12 + 4}}},
-                                {{{i * 12 + 5}}},
-                                {{{i * 12 + 6}}},
-                                {{{i * 12 + 7}}},
-                                {{{i * 12 + 8}}},
-                                {{{i * 12 + 9}}},
-                                {{{i * 12 + 10}}},
-                                {{{i * 12 + 11}}}
+                                {{{i * 13}}},
+                                {{{i * 13 + 1}}},
+                                {{{i * 13 + 2}}},
+                                {{{i * 13 + 3}}}::json,
+                                {{{i * 13 + 4}}},
+                                {{{i * 13 + 5}}},
+                                {{{i * 13 + 6}}},
+                                {{{i * 13 + 7}}},
+                                {{{i * 13 + 8}}},
+                                {{{i * 13 + 9}}},
+                                {{{i * 13 + 10}}},
+                                {{{i * 13 + 11}}},
+                                {{{i * 13 + 12}}},
                             )");
             if (i != receivedEvents.Count - 1)
             {
@@ -230,6 +222,7 @@ public class EventsRepository<TDbContext> : IEventsRepository
             parameters.Add(receivedEvent.UpdateTimestamp!);
             parameters.Add(receivedEvent.EventKey);
             parameters.Add(receivedEvent.Partition);
+            parameters.Add(receivedEvent.NextExecutionTimestamp);
         }
         queryStringBuilder.Append(@" ON CONFLICT (""Id"") DO NOTHING;");
 
@@ -288,7 +281,8 @@ public class EventsRepository<TDbContext> : IEventsRepository
                                     r.""Status"",
                                     r.""Timestamp"",
                                     r.""Topic"",
-                                    r.""UpdateTimestamp""
+                                    r.""UpdateTimestamp"",
+                                    r.""NextExecutionTimestamp""
                                 FROM sharp_streamer.received_events AS r
                                   WHERE 
                                       r.""Status"" = {0} AND
@@ -322,15 +316,5 @@ public class EventsRepository<TDbContext> : IEventsRepository
                                       WHERE 
                                           p.""Id"" = ANY ({0});";
         await _dbContext.Database.ExecuteSqlRawAsync(deleteQuery, eventIds);
-    }
-
-    private static string CalculateErrorMessageValue(ReceivedEvent receivedEvent)
-    {
-        if (receivedEvent.ErrorMessage is null)
-        {
-            return "NULL";
-        }
-
-        return $"'{receivedEvent.ErrorMessage}'";
     }
 }
