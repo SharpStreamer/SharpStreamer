@@ -3,7 +3,9 @@
     "allow": [
       "Bash(dotnet sln:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(find . -name \"*.sln\" -exec cat {} \\\\;)",
+      "Bash(find samples/DotNetCore.SharpStreamer.RabbitMq.Npgsql/ -name \"Program.cs\" -exec cat {} \\\\;)"
     ]
   }
 }
