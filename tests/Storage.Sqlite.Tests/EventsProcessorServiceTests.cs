@@ -3,6 +3,7 @@ using DotNetCore.SharpStreamer.Entities;
 using DotNetCore.SharpStreamer.Enums;
 using DotNetCore.SharpStreamer.Options;
 using DotNetCore.SharpStreamer.Repositories.Abstractions;
+using DotNetCore.SharpStreamer.Services.Abstractions;
 using DotNetCore.SharpStreamer.Storage.Sqlite;
 using DotNetCore.SharpStreamer.Storage.Sqlite.Abstractions;
 using FluentAssertions;
@@ -25,6 +26,7 @@ public class EventsProcessorServiceTests
     private readonly Fixture _fixture;
     private readonly IDistributedSynchronizationHandle _lockHandle;
     private readonly IDistributedLock _distributedLock;
+    private readonly ITimeService _timeService;
 
     public EventsProcessorServiceTests(DataFixtureConfig fixtureConfig)
     {
@@ -37,6 +39,7 @@ public class EventsProcessorServiceTests
         // Setup lock provider to return a disposable handle for successful acquisition
         _lockHandle = Substitute.For<IDistributedSynchronizationHandle>();
         _distributedLock = Substitute.For<IDistributedLock>();
+        _timeService = Substitute.For<ITimeService>();
         _distributedLock
             .AcquireAsync(
                 Arg.Any<TimeSpan?>(),
@@ -56,6 +59,7 @@ public class EventsProcessorServiceTests
             _eventsRepository,
             _eventProcessor,
             _options,
+            _timeService,
             _lockProvider);
     }
 

@@ -161,45 +161,6 @@ public class EventsRepositoryTests : DatabaseTest
         }
     }
 
-    [Fact]
-    public async Task MarkPostProcessing_MarksPassedEvents()
-    {
-        // Arrange
-        DateTimeOffset currentTime = _fixture.Create<DateTimeOffset>();
-        _timeService.GetUtcNow().Returns(currentTime);
-        List<ReceivedEvent> receivedEvents = _fixture.CreateMany<ReceivedEvent>(3).ToList();
-        DbContext.Set<ReceivedEvent>().AddRange(receivedEvents);
-        await DbContext.SaveChangesAsync();
-
-        receivedEvents[0].Status = EventStatus.Failed;
-        receivedEvents[0].ErrorMessage = "Error message 1";
-
-        receivedEvents[1].Status = EventStatus.Succeeded;
-        receivedEvents[1].ErrorMessage = null;
-
-        receivedEvents[2].Status = EventStatus.Failed;
-        receivedEvents[2].ErrorMessage = null;
-    
-        // Act
-        await _eventsRepository.MarkPostProcessing(receivedEvents);
-
-        // Assert
-        await using DbContext assertDbContext = _dbContextFactory();
-        List<ReceivedEvent> dbEvents = await assertDbContext.Set<ReceivedEvent>().ToListAsync();
-
-        dbEvents.Single(r => r.Id == receivedEvents[0].Id).Status.Should().Be(EventStatus.Failed);
-        dbEvents.Single(r => r.Id == receivedEvents[0].Id).ErrorMessage.Should().Be("Error message 1");
-        dbEvents.Single(r => r.Id == receivedEvents[0].Id).UpdateTimestamp.Should().Be(currentTime);
-
-        dbEvents.Single(r => r.Id == receivedEvents[1].Id).Status.Should().Be(EventStatus.Succeeded);
-        dbEvents.Single(r => r.Id == receivedEvents[1].Id).ErrorMessage.Should().Be(null);
-        dbEvents.Single(r => r.Id == receivedEvents[1].Id).UpdateTimestamp.Should().Be(currentTime);
-
-        dbEvents.Single(r => r.Id == receivedEvents[2].Id).Status.Should().Be(EventStatus.Failed);
-        dbEvents.Single(r => r.Id == receivedEvents[2].Id).ErrorMessage.Should().Be(null);
-        dbEvents.Single(r => r.Id == receivedEvents[2].Id).UpdateTimestamp.Should().Be(currentTime);
-    }
-
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -226,6 +187,7 @@ public class EventsRepositoryTests : DatabaseTest
         dbEvents.Single(r => r.Id == receivedEvent.Id).Status.Should().Be(EventStatus.Failed);
         dbEvents.Single(r => r.Id == receivedEvent.Id).ErrorMessage.Should().Be(errorMessage);
         dbEvents.Single(r => r.Id == receivedEvent.Id).UpdateTimestamp.Should().Be(currentTime);
+        dbEvents.Single(r => r.Id == receivedEvent.Id).NextExecutionTimestamp.Should().Be(receivedEvent.NextExecutionTimestamp);
     }
 
     [Fact]
@@ -539,16 +501,16 @@ public class EventsRepositoryTests : DatabaseTest
         }
         for (int i = 0; i < 2; i++)
         {
-            receivedEvents[i].UpdateTimestamp = currentTime.AddSeconds(-21);
+            receivedEvents[i].NextExecutionTimestamp = currentTime.AddSeconds(-21);
         }
         for (int i = 2; i < 5; i++)
         {
-            receivedEvents[i].UpdateTimestamp = currentTime.AddSeconds(-20);
+            receivedEvents[i].NextExecutionTimestamp = currentTime;
         }
         for (int i = 5; i < 10; i++)
         {
             receivedEvents[i].Status = EventStatus.None;
-            receivedEvents[i].UpdateTimestamp = null;
+            receivedEvents[i].NextExecutionTimestamp = currentTime.AddSeconds(-1);
             receivedEvents[i].RetryCount = 0;
         }
 

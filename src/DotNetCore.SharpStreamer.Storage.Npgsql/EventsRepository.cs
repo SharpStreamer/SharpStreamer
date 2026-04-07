@@ -204,7 +204,7 @@ public class EventsRepository<TDbContext> : IEventsRepository
                                 {{{i * 13 + 9}}},
                                 {{{i * 13 + 10}}},
                                 {{{i * 13 + 11}}},
-                                {{{i * 13 + 12}}},
+                                {{{i * 13 + 12}}}
                             )");
             if (i != receivedEvents.Count - 1)
             {
