@@ -30,7 +30,7 @@ internal class EventsProcessorService(
         Dictionary<Guid, EventStatus> processedEvents = new Dictionary<Guid, EventStatus>();
         foreach (ReceivedEvent receivedEvent in events)
         {
-            (Guid id, EventStatus newStatus, string? exceptionMessage) =
+            (Guid id, EventStatus newStatus, string? exceptionMessage, int nextRetryInSeconds) =
                 await eventProcessor.ProcessEvent(receivedEvent, processedEvents);
 
             const string escapeCharForExceptionMessage = "'";
@@ -38,7 +38,7 @@ internal class EventsProcessorService(
             {
                 receivedEvent.Status = newStatus;
                 receivedEvent.ErrorMessage = exceptionMessage?[..Math.Min(1000, exceptionMessage.Length)]?.Replace(escapeCharForExceptionMessage[0], '-'); // Takes first 1000 character only
-                receivedEvent.NextExecutionTimestamp = timeService.GetUtcNow().AddSeconds(20);
+                receivedEvent.NextExecutionTimestamp = timeService.GetUtcNow().AddSeconds(nextRetryInSeconds);
                 processedEvents.Add(id, newStatus);
                 await eventsRepository.MarkPostProcessing(receivedEvent, CancellationToken.None);
             }

@@ -23,7 +23,8 @@ internal class EventProcessorService(
     IDistributedLockProvider lockProvider,
     ILogger<EventProcessorService> logger) : IEventProcessor
 {
-    public async Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent(ReceivedEvent receivedEvent, Dictionary<Guid, EventStatus> processedEvents)
+    public async Task<(Guid id, EventStatus newStatus, string? exceptionMessage, int nextRetryInSeconds)> ProcessEvent
+        (ReceivedEvent receivedEvent, Dictionary<Guid, EventStatus> processedEvents)
     {
         ConsumerMetadata? consumerMetadata = null;
         try
@@ -38,7 +39,8 @@ internal class EventProcessorService(
             consumerMetadata = cacheService.GetConsumerMetadata(eventName);
             if (consumerMetadata is null)
             {
-                return (receivedEvent.Id, EventStatus.Succeeded, "Event handler metadata was not found. maybe you don't have it registered");
+                return
+                    (receivedEvent.Id, EventStatus.Succeeded, "Event handler metadata was not found. maybe you don't have it registered", 0);
             }
 
             if (consumerMetadata.NeedsToBeCheckedPredecessor)
@@ -64,12 +66,12 @@ internal class EventProcessorService(
             }
 
             logger.LogInformation($"{consumerMetadata.EventType.Name} was handled successfully.");
-            return (receivedEvent.Id, EventStatus.Succeeded, null);
+            return (receivedEvent.Id, EventStatus.Succeeded, null, 0);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, $"{consumerMetadata?.EventType.Name ?? "Unknown event"} was handled unsuccessfully.");
-            return (receivedEvent.Id, EventStatus.Failed, ex.Message);
+            return (receivedEvent.Id, EventStatus.Failed, ex.Message, consumerMetadata?.NextRetryInSeconds ?? 0);
         }
     }
 

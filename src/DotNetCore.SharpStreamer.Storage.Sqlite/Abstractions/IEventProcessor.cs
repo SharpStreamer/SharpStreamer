@@ -5,5 +5,6 @@ namespace DotNetCore.SharpStreamer.Storage.Sqlite.Abstractions;
 
 internal interface IEventProcessor
 {
-    Task<(Guid id, EventStatus newStatus, string? exceptionMessage)> ProcessEvent(ReceivedEvent receivedEvent, Dictionary<Guid, EventStatus> processedEvents);
+    Task<(Guid id, EventStatus newStatus, string? exceptionMessage, int nextRetryInSeconds)> ProcessEvent
+        (ReceivedEvent receivedEvent, Dictionary<Guid, EventStatus> processedEvents);
 }

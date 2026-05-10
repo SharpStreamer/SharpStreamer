@@ -127,7 +127,7 @@ public class EventsProcessorServiceTests
         // First event throws exception - should stop processing
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns<(Guid, EventStatus, string?)>(_ => throw new InvalidOperationException("Processing failed"));
+            .Returns<(Guid, EventStatus, string?, int)>(_ => throw new InvalidOperationException("Processing failed"));
 
         // Act & Assert - Should throw and stop processing
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ProcessEvents());
@@ -158,11 +158,11 @@ public class EventsProcessorServiceTests
         // First event returns empty ID, second returns valid ID
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((Guid.Empty, EventStatus.Failed, "Error message"));
+            .Returns((Guid.Empty, EventStatus.Failed, "Error message", 0));
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[1]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[1].Id, EventStatus.Succeeded, (string?)null));
+            .Returns((events[1].Id, EventStatus.Succeeded, (string?)null, 0));
 
         // Act
         await _service.ProcessEvents();
@@ -177,11 +177,14 @@ public class EventsProcessorServiceTests
     }
 
     [Fact]
-    public async Task ProcessEvents_ExceptionMessageTooLong_TruncatesErrorMessage()
+    public async Task ProcessEvents_WhenExceptionMessageTooLongAndNextRetryTimeReturned_TruncatesErrorMessageAndSetNextRetryCorrectly()
     {
         // Arrange
         List<ReceivedEvent> events = _fixture.CreateMany<ReceivedEvent>(1).ToList();
         string longErrorMessage = new('A', 1500); // Longer than 1000 characters
+
+        _timeService.GetUtcNow().Returns(new DateTimeOffset(2026, 12, 12, 5, 0, 0, TimeSpan.Zero));
+        DateTimeOffset expectedNextExecutionTimestamp = new DateTimeOffset(2026, 12, 12, 5, 2, 4, TimeSpan.Zero);
 
         _eventsRepository
             .GetAndMarkEventsForProcessing(Arg.Any<CancellationToken>())
@@ -189,7 +192,7 @@ public class EventsProcessorServiceTests
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[0].Id, EventStatus.Failed, longErrorMessage));
+            .Returns((events[0].Id, EventStatus.Failed, longErrorMessage, 124));
 
         // Act
         await _service.ProcessEvents();
@@ -198,6 +201,7 @@ public class EventsProcessorServiceTests
         ReceivedEvent processedEvent = events[0];
         Assert.True(processedEvent.ErrorMessage.Length <= 1000);
         Assert.Equal(longErrorMessage[..1000], processedEvent.ErrorMessage);
+        Assert.True(processedEvent.NextExecutionTimestamp == expectedNextExecutionTimestamp);
     }
 
     [Fact]
@@ -213,7 +217,7 @@ public class EventsProcessorServiceTests
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[0].Id, EventStatus.Failed, errorMessageWithQuotes));
+            .Returns((events[0].Id, EventStatus.Failed, errorMessageWithQuotes, 0));
 
         // Act
         await _service.ProcessEvents();
@@ -234,15 +238,15 @@ public class EventsProcessorServiceTests
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[0].Id, EventStatus.Succeeded, (string?)null));
+            .Returns((events[0].Id, EventStatus.Succeeded, (string?)null, 0));
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[1]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[1].Id, EventStatus.Failed, "Failure reason"));
+            .Returns((events[1].Id, EventStatus.Failed, "Failure reason", 0));
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[2]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[2].Id, EventStatus.Failed, "Failed reason"));
+            .Returns((events[2].Id, EventStatus.Failed, "Failed reason", 0));
 
         // Act
         await _service.ProcessEvents();
@@ -285,7 +289,7 @@ public class EventsProcessorServiceTests
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[0].Id, EventStatus.Failed, (string?)null));
+            .Returns((events[0].Id, EventStatus.Failed, (string?)null, 0));
 
         // Act
         await _service.ProcessEvents();
@@ -309,7 +313,7 @@ public class EventsProcessorServiceTests
 
         _eventProcessor
             .ProcessEvent(Arg.Is(events[0]), Arg.Any<Dictionary<Guid, EventStatus>>())
-            .Returns((events[0].Id, EventStatus.Failed, emptyMessage));
+            .Returns((events[0].Id, EventStatus.Failed, emptyMessage, 0));
 
         // Act
         await _service.ProcessEvents();
@@ -336,7 +340,7 @@ public class EventsProcessorServiceTests
                 firstDictionaryPassedCaptured = new  Dictionary<Guid, EventStatus>(dict);
                 originalDictionaryInFirstCall = dict;
             }))
-            .Returns((events[0].Id, EventStatus.Succeeded, (string?)null));
+            .Returns((events[0].Id, EventStatus.Succeeded, (string?)null, 0));
 
         Dictionary<Guid, EventStatus>? originalDictionaryInSecondCall = null;
         Dictionary<Guid, EventStatus>? secondDictionaryPassedCaptured = null;
@@ -346,7 +350,7 @@ public class EventsProcessorServiceTests
                 secondDictionaryPassedCaptured = new  Dictionary<Guid, EventStatus>(dict);
                 originalDictionaryInSecondCall = dict;
             }))
-            .Returns((events[1].Id, EventStatus.Failed, "Error"));
+            .Returns((events[1].Id, EventStatus.Failed, "Error", 0));
 
         // Act
         await _service.ProcessEvents();
@@ -387,7 +391,7 @@ public class EventsProcessorServiceTests
         {
             _eventProcessor
                 .ProcessEvent(Arg.Is(eventItem), Arg.Any<Dictionary<Guid, EventStatus>>())
-                .Returns((eventItem.Id, EventStatus.Succeeded, (string?)null));
+                .Returns((eventItem.Id, EventStatus.Succeeded, (string?)null, 0));
         }
     }
 

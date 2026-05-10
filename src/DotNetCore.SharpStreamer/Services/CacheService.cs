@@ -40,6 +40,7 @@ internal class CacheService : ICacheService
         {
             EventType = type,
             NeedsToBeCheckedPredecessor = consumeEventAttribute.CheckPredecessor,
+            NextRetryInSeconds = consumeEventAttribute.NextRetryInSeconds,
         };
 
         if (!_cache.TryAdd(consumeEventAttribute.EventName, consumerMetadata))
