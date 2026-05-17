@@ -45,7 +45,22 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
     {
         ConfigurePublishedEvents(modelBuilder);
         ConfigureReceivedEvents(modelBuilder);
+        ConfigureDistributedOperations(modelBuilder);
         return modelBuilder;
+    }
+
+    private static void ConfigureDistributedOperations(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DistributedOperation>(entity =>
+        {
+            entity.ToTable("distributed_operations", "sharp_streamer");
+
+            entity.HasKey(e => e.Name);
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(300)
+                .IsRequired();
+        });
     }
 
     private static void ConfigureReceivedEvents(ModelBuilder modelBuilder)
@@ -118,8 +133,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasDatabaseName("IX_Events_For_Processing_New");
 
             entity.HasIndex(e => new { e.Timestamp })
-                .HasDatabaseName("IX_ReceivedEvents_Timestamp")
-                .HasMethod("BRIN");
+                .HasDatabaseName("IX_ReceivedEvents_Timestamp");
         });
     }
 
@@ -163,8 +177,7 @@ public static class SharpStreamerEfCoreNpgsqlExtensions
                 .HasDatabaseName("IX_Events_For_Publishing");
 
             entity.HasIndex(e => new { e.Timestamp })
-                .HasDatabaseName("IX_PublishedEvents_Timestamp")
-                .HasMethod("BRIN");
+                .HasDatabaseName("IX_PublishedEvents_Timestamp");
         });
     }
 }
